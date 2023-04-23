@@ -2,7 +2,7 @@ FROM golang:alpine AS build
 RUN apk update && apk add ca-certificates && apk add tzdata
 WORKDIR /app
 ADD . .
-RUN CGO_ENABLED=1 GOOS=linux go build -o app
+RUN CGO_ENABLED=0 GOOS=linux go build -o app
 
 FROM scratch AS final
 COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
