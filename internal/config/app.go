@@ -7,6 +7,8 @@ import (
 
 // Config 环境变量映射结构体
 type Config struct {
+	AppEnv string `mapstructure:"APP_ENV" default:"development"`
+
 	ServerHost string `mapstructure:"SERVER_HOST" default:"127.0.0.1"`
 	ServerPort int    `mapstructure:"SERVER_PORT" default:"80"`
 

@@ -1,11 +1,14 @@
 package auth
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"microservices/internal/entity"
+)
 
 // Login .
-func Login(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "hi",
-	})
-	return
+func Login(c *gin.Context) (entity.Response, error) {
+	return entity.Response{
+		Data: map[string]any{},
+		Code: 0,
+	}, nil
 }
