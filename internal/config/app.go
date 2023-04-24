@@ -23,8 +23,8 @@ type Config struct {
 	RedisDB       int    `mappstructure:"REDIS_DB" default:"0"`
 }
 
-// AppConfig 系统配置
-var AppConfig Config
+// Env 系统配置
+var Env Config
 
 func init() {
 	viper.AddConfigPath(".")
@@ -33,8 +33,8 @@ func init() {
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
-	if err := viper.Unmarshal(&AppConfig); err != nil {
+	if err := viper.Unmarshal(&Env); err != nil {
 		panic(err)
 	}
-	fmt.Print(AppConfig)
+	fmt.Print(Env)
 }

@@ -17,7 +17,7 @@ func GetDB(ctx context.Context) *gorm.DB {
 	if instance != nil {
 		return instance
 	}
-	instance = mysql.ConnectDB(ctx, config.AppConfig.DBHost, HandlerName, config.AppConfig.DBUsername,
-		config.AppConfig.DBPassword, config.AppConfig.DBPort)
+	instance = mysql.ConnectDB(ctx, config.Env.DBHost, HandlerName, config.Env.DBUsername,
+		config.Env.DBPassword, config.Env.DBPort)
 	return instance
 }

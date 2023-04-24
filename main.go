@@ -19,7 +19,7 @@ func main() {
 	})
 	log.SetOutput(os.Stdout)
 	// disable gin log
-	if config.AppConfig.AppEnv == "production" {
+	if config.Env.AppEnv == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	} else {
 		gin.SetMode(gin.DebugMode)
@@ -31,7 +31,7 @@ func main() {
 	r.Use(gin.Recovery())
 	router.Register(r)
 	log.Println("App started at ", time.Now())
-	if err := r.Run(fmt.Sprintf("%s:%d", config.AppConfig.ServerHost, config.AppConfig.ServerPort)); err != nil {
+	if err := r.Run(fmt.Sprintf("%s:%d", config.Env.ServerHost, config.Env.ServerPort)); err != nil {
 		panic(err)
 	}
 }

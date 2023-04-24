@@ -5,6 +5,6 @@ import (
 	"microservices/internal/entity"
 )
 
-func Logout(c *gin.Context) (entity.Response, error) {
-	return entity.Response{}, nil
+func Logout(c *gin.Context) (*entity.Response, error) {
+	return &entity.Response{}, nil
 }

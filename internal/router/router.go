@@ -5,7 +5,10 @@ import (
 	"microservices/internal/entity"
 )
 
-type MicroserviceHandlerFunc func(*gin.Context) (entity.Response, error)
+// ToDo 在框架初始化的时候通过反射获取类型同时注册路由，这样就不需要在controller里每次获取参数映射，而变成了函数参数
+
+// MicroserviceHandlerFunc .
+type MicroserviceHandlerFunc func(*gin.Context) (*entity.Response, error)
 
 func wrapperResponse(function MicroserviceHandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {

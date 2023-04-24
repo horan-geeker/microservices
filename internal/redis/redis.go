@@ -14,11 +14,11 @@ type ikRedis struct {
 }
 
 func connect() *redis.Client {
-	log.Println(fmt.Sprintf("%s:%d", config.AppConfig.RedisHost, config.AppConfig.RedisPort))
+	log.Println(fmt.Sprintf("%s:%d", config.Env.RedisHost, config.Env.RedisPort))
 	conn := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", config.AppConfig.RedisHost, config.AppConfig.RedisPort),
-		Password: config.AppConfig.RedisPassword,
-		DB:       config.AppConfig.RedisDB,
+		Addr:     fmt.Sprintf("%s:%d", config.Env.RedisHost, config.Env.RedisPort),
+		Password: config.Env.RedisPassword,
+		DB:       config.Env.RedisDB,
 	})
 
 	_, err := conn.Ping().Result()
