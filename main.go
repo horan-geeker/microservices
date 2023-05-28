@@ -7,10 +7,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"microservices/internal/config"
+	_ "microservices/internal/config"
 	"microservices/internal/middleware"
 	"microservices/internal/router"
+	_ "microservices/internal/router"
 	"os"
-	"time"
 )
 
 func main() {
@@ -30,7 +31,7 @@ func main() {
 	r.Use(middleware.RequestLogger)
 	r.Use(gin.Recovery())
 	router.Register(r)
-	log.Println("App started at ", time.Now())
+	log.Println("server host", config.Env.ServerHost, "port", config.Env.ServerPort)
 	if err := r.Run(fmt.Sprintf("%s:%d", config.Env.ServerHost, config.Env.ServerPort)); err != nil {
 		panic(err)
 	}

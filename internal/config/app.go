@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/spf13/viper"
 )
 
@@ -36,5 +35,4 @@ func init() {
 	if err := viper.Unmarshal(&Env); err != nil {
 		panic(err)
 	}
-	fmt.Print(Env)
 }
