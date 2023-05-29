@@ -1,10 +1,14 @@
 package request
 
-import "github.com/gin-gonic/gin"
-
 // LoginParams .
 type LoginParams struct {
-	Context  *gin.Context
 	Username string `binding:"required" json:"username"`
 	Password string `binding:"required" json:"password"`
+}
+
+// ChangePasswordParams .
+type ChangePasswordParams struct {
+	OldPassword string `json:"oldPassword,omitempty"`
+	SmsCode     string `json:"smsCode,omitempty"`
+	NewPassword string `binding:"required" json:"newPassword"`
 }

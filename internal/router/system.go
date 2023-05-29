@@ -6,11 +6,12 @@ import (
 )
 
 func init() {
-	routes = append(routes,
-		router{
+	routes = append(routes, []router{
+		{
 			Method: http.MethodGet,
 			Path:   "/system/health",
 			Func:   system.Health,
 		},
+	}...,
 	)
 }

@@ -1,16 +1,13 @@
 package auth
 
 import (
-	"microservices/internal/entity"
+	"github.com/gin-gonic/gin"
 	"microservices/internal/request"
 )
 
 // Login .
-func Login(req request.LoginParams) (*entity.Response, error) {
-	return &entity.Response{
-		Data: map[string]any{
-			"username": req.Username,
-		},
-		Code: 0,
-	}, nil
+func Login(c *gin.Context, req *request.LoginParams) (map[string]any, int, error) {
+	return map[string]any{
+		"username": req.Username,
+	}, 0, nil
 }

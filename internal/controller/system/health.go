@@ -1,15 +1,10 @@
 package system
 
-import (
-	"github.com/gin-gonic/gin"
-	"microservices/internal/entity"
-)
+import "github.com/gin-gonic/gin"
 
 // Health .
-func Health(c *gin.Context) (*entity.Response, error) {
-	return &entity.Response{
-		Data: map[string]interface{}{
-			"status": "UP",
-		},
-	}, nil
+func Health(c *gin.Context) (map[string]any, int, error) {
+	return map[string]interface{}{
+		"status": "UP",
+	}, 0, nil
 }
