@@ -9,5 +9,5 @@ import (
 func ChangePassword(c *gin.Context, param *request.ChangePasswordParams) (map[string]any, int, error) {
 	return map[string]any{
 		"old_password": param.OldPassword,
-	}, 1, nil
+	}, 0, nil
 }

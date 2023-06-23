@@ -49,7 +49,7 @@ func wrapperGin(route router) gin.HandlerFunc {
 			values = append(values, reflect.ValueOf(param))
 		}
 		values = f.Call(values) // 执行控制器函数
-		code := int(values[1].Int())
+		code := values[1].Int()
 		err := values[2].Interface()
 		if err != nil {
 			e := err.(error)
@@ -114,7 +114,7 @@ func parseJson(c *gin.Context, param any) (any, error) {
 	return param, nil
 }
 
-func makeSuccessResponse(c *gin.Context, data map[string]any, code int) {
+func makeSuccessResponse(c *gin.Context, data map[string]any, code int64) {
 	requestId, _ := c.Request.Context().Value("requestId").(string)
 	response := entity.Response{
 		RequestId: requestId,
@@ -124,7 +124,7 @@ func makeSuccessResponse(c *gin.Context, data map[string]any, code int) {
 	c.JSON(200, response)
 }
 
-func makeErrorResponse(c *gin.Context, code int, message string) {
+func makeErrorResponse(c *gin.Context, code int64, message string) {
 	requestId, _ := c.Request.Context().Value("requestId").(string)
 	c.JSON(500, gin.H{
 		"request_id": requestId,

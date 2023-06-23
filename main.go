@@ -31,7 +31,7 @@ func main() {
 	r.Use(middleware.RequestLogger)
 	r.Use(gin.Recovery())
 	router.Register(r)
-	log.Println("server host", config.Env.ServerHost, "port", config.Env.ServerPort)
+	log.Info("server host", config.Env.ServerHost, "port", config.Env.ServerPort)
 	if err := r.Run(fmt.Sprintf("%s:%d", config.Env.ServerHost, config.Env.ServerPort)); err != nil {
 		panic(err)
 	}
