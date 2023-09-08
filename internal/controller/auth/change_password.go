@@ -5,6 +5,10 @@ import (
 	"microservices/internal/request"
 )
 
+type AuthController struct {
+	authService *AuthService
+}
+
 // ChangePassword .
 func ChangePassword(c *gin.Context, param *request.ChangePasswordParams) (map[string]any, int, error) {
 	return map[string]any{
