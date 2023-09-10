@@ -49,7 +49,7 @@ func RequestLogger(c *gin.Context) {
 		"ip":         c.Request.Header.Get("x-forwarded-for"),
 		"request_id": requestId,
 		"body":       string(buf),
-		"event":      "request",
+		"event":      "api",
 		"header":     c.Request.Header,
 	}).Info()
 

@@ -5,7 +5,7 @@ import (
 	"microservices/internal/store"
 )
 
-// AuthLogicInterface defines functions used to handle user request.
+// AuthLogicInterface defines functions used to handle user api.
 type AuthLogicInterface interface {
 	AuthorizeCookie(ctx context.Context, opts metav1.ListOptions) (*v1.UserList, error)
 	ChangePassword(ctx context.Context, user *v1.User) error

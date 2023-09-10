@@ -2,7 +2,7 @@ package auth
 
 import (
 	"github.com/gin-gonic/gin"
-	"microservices/internal/request"
+	"microservices/api"
 )
 
 type AuthController struct {
@@ -10,7 +10,7 @@ type AuthController struct {
 }
 
 // ChangePassword .
-func ChangePassword(c *gin.Context, param *request.ChangePasswordParams) (map[string]any, int, error) {
+func ChangePassword(c *gin.Context, param *api.ChangePasswordParams) (map[string]any, int, error) {
 	return map[string]any{
 		"old_password": param.OldPassword,
 	}, 0, nil

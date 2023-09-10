@@ -82,7 +82,7 @@ func validateController(controller any) error {
 		return errors.New(name + " controller first argument must be gin context pointer")
 	}
 	if i > 1 && t.In(1).Kind() != reflect.Ptr {
-		return errors.New(name + " controller second argument must be request pointer")
+		return errors.New(name + " controller second argument must be api pointer")
 	}
 	o := t.NumOut()
 	if o != 3 {
