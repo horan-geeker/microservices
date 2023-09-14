@@ -1,26 +1,29 @@
 package router
 
 import (
+	"fmt"
 	"microservices/internal/controller/auth"
 	"net/http"
 )
 
 func init() {
+	fmt.Println("auth init")
+	authController := auth.NewAuthController(dataFactory, cacheFactory)
 	routes = append(routes, []router{
 		{
 			Method: http.MethodPost,
 			Path:   "/auth/login",
-			Func:   auth.Login,
+			Func:   authController.Login,
 		},
 		{
 			Method: http.MethodPost,
 			Path:   "/auth/logout",
-			Func:   auth.Logout,
+			Func:   authController.Logout,
 		},
 		{
 			Method: http.MethodPost,
 			Path:   "/auth/change-password",
-			Func:   auth.ChangePassword,
+			Func:   authController.ChangePassword,
 		},
 	}...,
 	)

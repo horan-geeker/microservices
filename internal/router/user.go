@@ -2,18 +2,16 @@ package router
 
 import (
 	"microservices/internal/controller/user"
-	"microservices/internal/store/mysql"
 	"net/http"
 )
 
 func init() {
-	store := mysql.ConnectDB(nil)
-	userController := user.NewUserController(store)
+	userController := user.NewUserController(dataFactory, cacheFactory)
 	routes = append(routes, []router{
 		{
 			Method: http.MethodGet,
-			Path:   "/userinfo/",
-			Func:   userController.Userinfo,
+			Path:   "/user/:uid",
+			Func:   userController.GetUserinfo,
 		},
 	}...,
 	)

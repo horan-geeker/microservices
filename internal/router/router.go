@@ -4,11 +4,17 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"microservices/internal/entity"
+	"microservices/internal/pkg/options"
+	"microservices/internal/store/mysql"
+	"microservices/internal/store/redis"
 	"reflect"
 	"runtime"
+	"strconv"
 )
 
 var routes []router
+var dataFactory = mysql.GetMysqlInstance(options.NewMySQLOptions())
+var cacheFactory = redis.GetRedisInstance(options.NewRedisOptions())
 
 type router struct {
 	Method        string
@@ -32,17 +38,36 @@ func wrapperGin(route router) gin.HandlerFunc {
 	t := reflect.TypeOf(route.Func)
 	f := reflect.ValueOf(route.Func)
 	argsNum := t.NumIn()
-	var req any
-	if argsNum > 1 {
-		req = reflect.New(t.In(1).Elem()).Interface()
+	var urlParamsType []reflect.Kind
+	var bodyStruct any
+	// 控制器最后一个参数是结构体解析的 body
+	for i := 0; i < argsNum-1; i++ {
+		urlParamsType = append(urlParamsType, t.In(argsNum-1).Kind())
+	}
+	if argsNum > 1 && t.In(argsNum-1).Kind() == reflect.Pointer {
+		bodyStruct = reflect.New(t.In(1).Elem()).Interface()
 	}
 	// 下方函数是运行时
 	return func(c *gin.Context) {
 		// 在框架初始化的时候通过反射获取类型同时注册路由，这样就不需要在controller里每次获取参数映射，而变成了函数参数
 		var values []reflect.Value
 		values = append(values, reflect.ValueOf(c))
-		if argsNum > 1 {
-			param, err := parseJson(c, req)
+		urlParams := parseUrlParams(c)
+		if len(urlParams) > 0 {
+			for index, urlParam := range urlParams {
+				arg := urlParam
+				var err error
+				if urlParamsType[index] == reflect.Int {
+					arg, err = strconv.Atoi(urlParam.(string))
+					if err != nil {
+						panic(err)
+					}
+				}
+				values = append(values, reflect.ValueOf(arg))
+			}
+		}
+		if bodyStruct != nil {
+			param, err := parseBodyToJsonStruct(c, bodyStruct)
 			if err != nil {
 				return
 			}
@@ -81,9 +106,6 @@ func validateController(controller any) error {
 	if t.In(0).Kind() != reflect.Ptr {
 		return errors.New(name + " controller first argument must be gin context pointer")
 	}
-	if i > 1 && t.In(1).Kind() != reflect.Ptr {
-		return errors.New(name + " controller second argument must be api pointer")
-	}
 	o := t.NumOut()
 	if o != 3 {
 		return errors.New(name + " controller must return 3 values")
@@ -100,8 +122,16 @@ func validateController(controller any) error {
 	return nil
 }
 
-func parseJson(c *gin.Context, param any) (any, error) {
-	if err := c.ShouldBindJSON(&param); err != nil {
+func parseUrlParams(c *gin.Context) []any {
+	params := make([]any, 0)
+	for _, param := range c.Params {
+		params = append(params, param.Value)
+	}
+	return params
+}
+
+func parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
+	if err := c.ShouldBindJSON(&reqStruct); err != nil {
 		requestId, _ := c.Request.Context().Value("requestId").(string)
 		c.JSON(400, gin.H{
 			"request_id": requestId,
@@ -111,7 +141,7 @@ func parseJson(c *gin.Context, param any) (any, error) {
 		})
 		return nil, err
 	}
-	return param, nil
+	return reqStruct, nil
 }
 
 func makeSuccessResponse(c *gin.Context, data map[string]any, code int64) {

@@ -10,8 +10,8 @@ type UserController struct {
 }
 
 // NewUserController .
-func NewUserController(store store.Factory) *UserController {
+func NewUserController(store store.DataFactory, cache store.CacheFactory) *UserController {
 	return &UserController{
-		logic: logic.NewLogic(store),
+		logic: logic.NewLogic(store, cache),
 	}
 }

@@ -11,15 +11,15 @@ type users struct {
 	db *gorm.DB
 }
 
-func newUsers(ds *mysqlstore) store.UserStore {
+func newUsers(s *mysqlStore) store.UserStore {
 	return &users{
-		db: ds.db,
+		db: s.db,
 	}
 }
 
-// GetByUserName return an user by the user identifier.
-func (u *users) GetByUserName(ctx context.Context, username string) (*model.User, error) {
+// GetByUid return an user by the user identifier.
+func (u *users) GetByUid(ctx context.Context, uid int) (*model.User, error) {
 	user := &model.User{}
-	err := u.db.Where("name = ?", username).First(&user).Error
+	err := u.db.WithContext(ctx).Where("id = ?", uid).Take(&user).Error
 	return user, err
 }

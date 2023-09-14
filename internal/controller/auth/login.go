@@ -6,7 +6,8 @@ import (
 )
 
 // Login .
-func Login(c *gin.Context, req *api.LoginParams) (map[string]any, int, error) {
+func (a *AuthController) Login(c *gin.Context, req *api.LoginParams) (map[string]any, int, error) {
+	a.logic.Auth().AuthorizeCookie(c.Request.Context(), 1)
 	return map[string]any{
 		"username": req.Username,
 	}, 0, nil

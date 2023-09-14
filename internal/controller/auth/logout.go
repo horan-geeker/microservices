@@ -5,6 +5,6 @@ import (
 )
 
 // Logout .
-func Logout(c *gin.Context) (map[string]any, int, error) {
+func (a *AuthController) Logout(c *gin.Context) (map[string]any, int, error) {
 	return map[string]any{}, 1, nil
 }

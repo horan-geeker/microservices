@@ -9,7 +9,8 @@ type LogicInterface interface {
 }
 
 type logic struct {
-	store store.Factory
+	store store.DataFactory
+	cache store.CacheFactory
 }
 
 func (l *logic) Users() UserLogicInterface {
@@ -21,6 +22,6 @@ func (l *logic) Auth() AuthLogicInterface {
 }
 
 // NewLogic .
-func NewLogic(store store.Factory) LogicInterface {
-	return &logic{store: store}
+func NewLogic(store store.DataFactory, cache store.CacheFactory) LogicInterface {
+	return &logic{store: store, cache: cache}
 }
