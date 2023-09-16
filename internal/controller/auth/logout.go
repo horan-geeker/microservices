@@ -1,10 +1,11 @@
 package auth
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 )
 
 // Logout .
-func (a *AuthController) Logout(c *gin.Context) (map[string]any, int, error) {
-	return map[string]any{}, 1, nil
+func (a *AuthController) Logout(c *gin.Context) (map[string]any, error) {
+	return map[string]any{}, errors.New("foo")
 }

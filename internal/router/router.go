@@ -2,11 +2,15 @@ package router
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	errors2 "microservices/errors"
 	"microservices/internal/entity"
 	"microservices/internal/pkg/options"
 	"microservices/internal/store/mysql"
 	"microservices/internal/store/redis"
+	"net/http"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -74,15 +78,14 @@ func wrapperGin(route router) gin.HandlerFunc {
 			values = append(values, reflect.ValueOf(param))
 		}
 		values = f.Call(values) // 执行控制器函数
-		code := values[1].Int()
-		err := values[2].Interface()
+		err := values[1].Interface()
 		if err != nil {
 			e := err.(error)
-			makeErrorResponse(c, code, e.Error())
+			makeErrorResponse(c, e)
 			return
 		}
 		data := values[0].Interface().(map[string]any)
-		makeSuccessResponse(c, data, code)
+		makeSuccessResponse(c, data)
 	}
 }
 
@@ -106,18 +109,18 @@ func validateController(controller any) error {
 	if t.In(0).Kind() != reflect.Ptr {
 		return errors.New(name + " controller first argument must be gin context pointer")
 	}
-	o := t.NumOut()
-	if o != 3 {
-		return errors.New(name + " controller must return 3 values")
+	// 校验 controller 出参定义
+	if t.NumOut() != 2 {
+		return errors.New(fmt.Sprintf("controller %s output args error", name))
 	}
 	if t.Out(0).Kind() != reflect.Map {
-		return errors.New(name + " controller first return value must be map[string]any")
+		return errors.New(fmt.Sprintf("controller %s output first arg not map", name))
 	}
-	if t.Out(1).Kind() != reflect.Int {
-		return errors.New(name + " controller second return value must be int")
+	if t.Out(1).Kind() != reflect.Interface {
+		return errors.New(fmt.Sprintf("controller %s output second arg not interface error", name))
 	}
-	if t.Out(2).Kind() != reflect.Interface {
-		return errors.New(name + " controller third return value must be error")
+	if _, ok := reflect.New(t.Out(1)).Interface().(*error); !ok {
+		return errors.New(fmt.Sprintf("controller %s output second arg not error", name))
 	}
 	return nil
 }
@@ -144,19 +147,35 @@ func parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
 	return reqStruct, nil
 }
 
-func makeSuccessResponse(c *gin.Context, data map[string]any, code int64) {
+func makeSuccessResponse(c *gin.Context, data map[string]any) {
 	requestId, _ := c.Request.Context().Value("requestId").(string)
 	response := entity.Response{
 		RequestId: requestId,
 		Data:      data,
-		Code:      code,
+		Code:      0,
 	}
 	c.JSON(200, response)
 }
 
-func makeErrorResponse(c *gin.Context, code int64, message string) {
+func makeErrorResponse(c *gin.Context, err error) {
 	requestId, _ := c.Request.Context().Value("requestId").(string)
-	c.JSON(500, gin.H{
+	code := errors2.InternalServerErrorCode
+	var message string
+	httpStatus := http.StatusInternalServerError
+	for _, e := range errors2.GetCollectErr() {
+		if errors.Is(err, e) {
+			code = errors2.GetErrCodeByErr(e)
+			httpStatus = errors2.GetHttpStatusByErr(e)
+		}
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		code = errors2.DataNotFound
+		message = "数据不存在"
+		httpStatus = http.StatusNotFound
+	} else {
+		message = err.Error()
+	}
+	c.JSON(httpStatus, gin.H{
 		"request_id": requestId,
 		"code":       code,
 		"message":    message,

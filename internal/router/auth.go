@@ -1,13 +1,11 @@
 package router
 
 import (
-	"fmt"
 	"microservices/internal/controller/auth"
 	"net/http"
 )
 
 func init() {
-	fmt.Println("auth init")
 	authController := auth.NewAuthController(dataFactory, cacheFactory)
 	routes = append(routes, []router{
 		{
