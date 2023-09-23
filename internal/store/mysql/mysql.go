@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
 	"microservices/internal/pkg/options"
 	"microservices/internal/store"
+	"microservices/pkg/meta"
 	"net/url"
 )
 
@@ -25,7 +25,7 @@ func GetMysqlInstance(opts *options.MySQLOptions) store.DataFactory {
 	writeDsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=%s",
 		opts.Username, opts.Password, opts.Host, opts.Port, opts.Database, opts.Charset, url.QueryEscape(opts.Location))
 	writeDB, err := gorm.Open(mysql.Open(writeDsn), &gorm.Config{
-		Logger: logger.Default.LogMode(opts.LogLevel),
+		Logger: meta.NewGormCustomLogger(opts.LogLevel),
 	})
 	if err != nil {
 		panic(err)

@@ -1,12 +1,13 @@
 module microservices
 
-go 1.18
+go 1.20
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.62.382
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-redis/redis v6.14.1+incompatible
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.15.0

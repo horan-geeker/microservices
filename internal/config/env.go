@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Config 环境变量映射结构体
-type Config struct {
+// EnvConfig 环境变量映射结构体
+type EnvConfig struct {
 	AppEnv string `mapstructure:"APP_ENV" default:"development"`
 
 	ServerHost string `mapstructure:"SERVER_HOST" default:"127.0.0.1"`
@@ -16,10 +16,10 @@ type Config struct {
 	DBUsername string `mapstructure:"DB_USERNAME"`
 	DBPassword string `mapstructure:"DB_PASSWORD"`
 
-	RedisHost     string `mappstructure:"REDIS_HOST" default:"127.0.0.1"`
-	RedisPassword string `mappstructure:"REDIS_PASSWORD" default:""`
-	RedisPort     int    `mappstructure:"REDIS_PORT" default:"6379"`
-	RedisDB       int    `mappstructure:"REDIS_DB" default:"0"`
+	RedisHost     string `mapstructure:"REDIS_HOST" default:"127.0.0.1"`
+	RedisPassword string `mapstructure:"REDIS_PASSWORD" default:""`
+	RedisPort     int    `mapstructure:"REDIS_PORT" default:"6379"`
+	RedisDB       int    `mapstructure:"REDIS_DB" default:"0"`
 
 	MailServerAddress  string `mapstructure:"MAIL_SERVER_ADDRESS"`
 	MailServerPassword string `mapstructure:"MAIL_SERVER_PASSWORD"`
@@ -28,19 +28,24 @@ type Config struct {
 	AliyunAccessKeySecret string `mapstructure:"ALIYUN_ACCESS_KEY_SECRET"`
 	AliyunSmsSignName     string `mapstructure:"ALIYUN_SMS_SIGN_NAME"`
 	AliyunSmsTemplateCode string `mapstructure:"ALIYUN_SMS_TEMPLATE_CODE"`
+
+	JWTSecret string `mapstructure:"JWT_SECRET"`
 }
 
 // Env 系统配置
-var Env Config
+var env *EnvConfig
 
-func init() {
-	viper.AddConfigPath(".")
-	viper.SetConfigName(".env")
-	viper.SetConfigType("env")
-	if err := viper.ReadInConfig(); err != nil {
-		panic(err)
+func NewEnvConfig() *EnvConfig {
+	if env == nil {
+		viper.AddConfigPath(".")
+		viper.SetConfigName(".env")
+		viper.SetConfigType("env")
+		if err := viper.ReadInConfig(); err != nil {
+			panic(err)
+		}
+		if err := viper.Unmarshal(&env); err != nil {
+			panic(err)
+		}
 	}
-	if err := viper.Unmarshal(&Env); err != nil {
-		panic(err)
-	}
+	return env
 }

@@ -12,20 +12,17 @@ type User struct {
 	// Standard object's metadata.
 	meta.ObjectMeta `json:"metadata,omitempty"`
 
-	Status int `json:"status" gorm:"column:status" validate:"omitempty"`
+	Status int `json:"status" gorm:"column:status"`
 
-	// Required: true
-	Nickname string `json:"nickname" gorm:"column:nickname" validate:"required,min=1,max=30"`
+	Name string `json:"name" gorm:"column:name"`
 
-	// Required: true
-	Password string `json:"password,omitempty" gorm:"column:password" validate:"required"`
+	Password string `json:"-" gorm:"column:password"`
 
-	// Required: true
-	Email string `json:"email" gorm:"column:email" validate:"required,email,min=1,max=100"`
+	Email string `json:"email" gorm:"column:email"`
 
-	Phone string `json:"phone" gorm:"column:phone" validate:"omitempty"`
+	Phone string `json:"phone" gorm:"column:phone"`
 
-	IsAdmin int `json:"isAdmin,omitempty" gorm:"column:isAdmin" validate:"omitempty"`
+	IsAdmin int `json:"isAdmin,omitempty" gorm:"column:is_admin"`
 
-	LoginedAt time.Time `json:"loginedAt,omitempty" gorm:"column:loginedAt"`
+	LoginAt time.Time `json:"loginAt,omitempty" gorm:"column:login_at"`
 }

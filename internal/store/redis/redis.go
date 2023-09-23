@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis"
-	"microservices/internal/config"
 	"microservices/internal/pkg/options"
 	"microservices/internal/store"
-	"time"
 )
 
 var rdb *redis.Client
@@ -16,20 +14,24 @@ type redisStore struct {
 	rdb *redis.Client
 }
 
-func (c *redisStore) GetKey(ctx context.Context, key string) (string, error) {
-	return c.rdb.WithContext(ctx).Get(key).Result()
+func (c *redisStore) Auth() store.AuthCache {
+	return newAuth(c)
 }
 
-func (c *redisStore) SetKey(ctx context.Context, key, value string, expire time.Duration) error {
-	return c.rdb.WithContext(ctx).Set(key, value, expire).Err()
+func (c *redisStore) Users() store.UserCache {
+	return newUser(c)
+}
+
+func (c *redisStore) Del(ctx context.Context, key string) error {
+	return c.rdb.WithContext(ctx).Del(key).Err()
 }
 
 // GetRedisInstance .
 func GetRedisInstance(opts *options.RedisOptions) store.CacheFactory {
 	conn := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", opts.Host, opts.Port),
-		Password: config.Env.RedisPassword,
-		DB:       config.Env.RedisDB,
+		Password: opts.Password,
+		DB:       opts.DB,
 	})
 
 	_, err := conn.Ping().Result()

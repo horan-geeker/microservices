@@ -2,10 +2,11 @@ package options
 
 import (
 	"gorm.io/gorm/logger"
+	"microservices/internal/config"
 	"time"
 )
 
-// MySQLOptions defines options for mysql database.
+// MySQLOptions defines consts for mysql database.
 type MySQLOptions struct {
 	Host                  string          `json:"host,omitempty"                     mapstructure:"host"`
 	ReplicaHost           string          `json:"replicaHost" mapstructure:"replicaHost"`
@@ -23,11 +24,12 @@ type MySQLOptions struct {
 
 // NewMySQLOptions create a `zero` value instance.
 func NewMySQLOptions() *MySQLOptions {
+	env := config.NewEnvConfig()
 	return &MySQLOptions{
-		Host:                  "127.0.0.1",
-		Port:                  3306,
-		Username:              "root",
-		Password:              "root",
+		Host:                  env.DBHost,
+		Port:                  env.DBPort,
+		Username:              env.DBUsername,
+		Password:              env.DBPassword,
 		Database:              "microservice",
 		MaxIdleConnections:    100,
 		MaxOpenConnections:    100,

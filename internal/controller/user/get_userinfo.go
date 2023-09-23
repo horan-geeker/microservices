@@ -5,7 +5,7 @@ import (
 )
 
 // GetUserinfo .
-func (u *UserController) GetUserinfo(c *gin.Context, uid int) (map[string]any, error) {
+func (u *UserController) GetUserinfo(c *gin.Context, uid uint64) (map[string]any, error) {
 	userinfo, err := u.logic.Users().GetByUid(c.Request.Context(), uid)
 	if err != nil {
 		return nil, err

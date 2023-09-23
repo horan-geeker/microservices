@@ -5,7 +5,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"strconv"
 	"time"
@@ -32,8 +32,8 @@ func (w bodyLogWriter) WriteString(s string) (int, error) {
 func RequestLogger(c *gin.Context) {
 	begin := time.Now()
 
-	buf, _ := ioutil.ReadAll(c.Request.Body)
-	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
+	buf, _ := io.ReadAll(c.Request.Body)
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
 
 	requestId := c.Request.Header.Get("requestId")
 	if requestId == "" {
@@ -44,13 +44,13 @@ func RequestLogger(c *gin.Context) {
 	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "requestId", requestId))
 
 	log.WithFields(log.Fields{
-		"method":     c.Request.Method,
-		"url":        c.Request.URL.Host + c.Request.URL.String(),
-		"ip":         c.Request.Header.Get("x-forwarded-for"),
-		"request_id": requestId,
-		"body":       string(buf),
-		"event":      "api",
-		"header":     c.Request.Header,
+		"method":    c.Request.Method,
+		"url":       c.Request.URL.Host + c.Request.URL.String(),
+		"ip":        c.Request.Header.Get("x-forwarded-for"),
+		"requestId": requestId,
+		"body":      string(buf),
+		"event":     "api",
+		"header":    c.Request.Header,
 	}).Info()
 
 	blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
@@ -64,12 +64,12 @@ func RequestLogger(c *gin.Context) {
 	}
 	// Log response body
 	log.WithFields(log.Fields{
-		"method":      c.Request.Method,
-		"url":         c.Request.URL.Host + c.Request.URL.String(),
-		"request_id":  requestId,
-		"http_status": c.Writer.Status(),
-		"timeCost":    time.Since(begin).Milliseconds(),
-		"event":       "response",
-		"body":        body,
+		"method":     c.Request.Method,
+		"url":        c.Request.URL.Host + c.Request.URL.String(),
+		"requestId":  requestId,
+		"httpStatus": c.Writer.Status(),
+		"timeCost":   time.Since(begin).Milliseconds(),
+		"event":      "response",
+		"body":       body,
 	}).Info()
 }

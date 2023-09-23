@@ -9,7 +9,7 @@ import (
 // UserLogicInterface defines functions used to handle user api.
 type UserLogicInterface interface {
 	Create(ctx context.Context, user *model.User) error
-	GetByUid(ctx context.Context, uid int) (*model.User, error)
+	GetByUid(ctx context.Context, uid uint64) (*model.User, error)
 	List(ctx context.Context) ([]model.User, error)
 }
 
@@ -28,7 +28,7 @@ func (u *userLogic) Create(ctx context.Context, user *model.User) error {
 }
 
 // GetByUid .
-func (u *userLogic) GetByUid(ctx context.Context, uid int) (*model.User, error) {
+func (u *userLogic) GetByUid(ctx context.Context, uid uint64) (*model.User, error) {
 	return u.store.Users().GetByUid(ctx, uid)
 }
 
