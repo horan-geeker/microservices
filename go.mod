@@ -1,22 +1,26 @@
 module microservices
 
-go 1.18
+go 1.20
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.62.382
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-gonic/gin v1.9.0
-	github.com/go-redis/redis v6.14.1+incompatible
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang/mock v1.6.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.15.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gorm.io/driver/mysql v1.5.0
-	gorm.io/gorm v1.25.0
+	gorm.io/gorm v1.25.2
+	gorm.io/plugin/dbresolver v1.4.7
 )
 
 require (
 	github.com/bytedance/sonic v1.8.7 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -40,6 +44,7 @@ require (
 	github.com/onsi/gomega v1.27.6 // indirect
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b // indirect
 	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
+	github.com/redis/go-redis/v9 v9.2.0 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

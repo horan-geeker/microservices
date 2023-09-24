@@ -2,26 +2,12 @@ package router
 
 import (
 	"microservices/internal/controller/auth"
-	"net/http"
+	"microservices/internal/middleware"
 )
 
 func init() {
-	routes = append(routes, []router{
-		{
-			Method: http.MethodPost,
-			Path:   "/auth/login",
-			Func:   auth.Login,
-		},
-		{
-			Method: http.MethodPost,
-			Path:   "/auth/logout",
-			Func:   auth.Logout,
-		},
-		{
-			Method: http.MethodPost,
-			Path:   "/auth/change-password",
-			Func:   auth.ChangePassword,
-		},
-	}...,
-	)
+	authController := auth.NewAuthController(dataFactory, cacheFactory)
+	router.POST("/auth/login", authController.Login)
+	router.POST("/auth/logout", middleware.Authenticate(), authController.Logout)
+	router.POST("/auth/change-password", middleware.Authenticate(), authController.ChangePassword)
 }

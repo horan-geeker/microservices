@@ -5,6 +5,13 @@ import (
 )
 
 // Logout .
-func Logout(c *gin.Context) (map[string]any, int, error) {
-	return map[string]any{}, 1, nil
+func (a *AuthController) Logout(c *gin.Context) (map[string]any, error) {
+	auth, err := a.logic.Auth().GetAuthUser(c.Request.Context())
+	if err != nil {
+		return nil, err
+	}
+	if err := a.logic.Auth().Logout(c.Request.Context(), auth.Uid); err != nil {
+		return nil, err
+	}
+	return nil, nil
 }

@@ -2,8 +2,8 @@ package service
 
 import (
 	"gopkg.in/gomail.v2"
-	"microservices/consts"
 	"microservices/internal/config"
+	"microservices/pkg/consts"
 	"net/mail"
 )
 
