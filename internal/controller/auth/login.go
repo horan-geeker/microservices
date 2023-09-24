@@ -8,8 +8,8 @@ import (
 
 // Login .
 func (a *AuthController) Login(c *gin.Context, params *api.LoginParams) (map[string]any, error) {
-	user, err := a.logic.Auth().Login(c.Request.Context(), params.Name, params.Email, params.Phone,
-		params.Password, params.SmsCode)
+	user, token, err := a.logic.Auth().Login(c.Request.Context(), params.Name, params.Email, params.Phone, params.Password,
+		params.SmsCode, params.EmailCode)
 	if err != nil {
 		return nil, err
 	}
@@ -22,5 +22,6 @@ func (a *AuthController) Login(c *gin.Context, params *api.LoginParams) (map[str
 			"phone":       user.Phone,
 			"lastLoginAt": user.LoginAt.Format(time.DateTime),
 		},
+		"token": token,
 	}, nil
 }

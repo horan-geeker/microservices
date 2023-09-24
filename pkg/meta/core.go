@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	errors2 "microservices/errors"
 	"microservices/internal/entity"
+	errors2 "microservices/pkg/ecode"
+	"microservices/pkg/util"
 	"net/http"
 	"reflect"
-	"runtime"
 	"strconv"
+	"strings"
 )
 
 var app *Engine
@@ -20,40 +21,45 @@ type Engine struct {
 	*gin.Engine
 }
 
-type customHandler any
-
 // POST is a shortcut for router.Handle("POST", path, handlers).
-func (e *Engine) POST(relativePath string, handlers ...customHandler) gin.IRoutes {
+func (e *Engine) POST(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodPost, relativePath, handlers...)
 }
 
 // GET is a shortcut for router.Handle("GET", path, handlers).
-func (e *Engine) GET(relativePath string, handlers ...customHandler) gin.IRoutes {
+func (e *Engine) GET(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodGet, relativePath, handlers...)
 }
 
 // DELETE is a shortcut for router.Handle("DELETE", path, handlers).
-func (e *Engine) DELETE(relativePath string, handlers ...customHandler) gin.IRoutes {
+func (e *Engine) DELETE(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodDelete, relativePath, handlers...)
 }
 
 // PATCH is a shortcut for router.Handle("PATCH", path, handlers).
-func (e *Engine) PATCH(relativePath string, handlers ...customHandler) gin.IRoutes {
+func (e *Engine) PATCH(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodPatch, relativePath, handlers...)
 }
 
 // PUT is a shortcut for router.Handle("PUT", path, handlers).
-func (e *Engine) PUT(relativePath string, handlers ...customHandler) gin.IRoutes {
+func (e *Engine) PUT(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodPut, relativePath, handlers...)
 }
 
-func (e *Engine) Handle(httpMethod, relativePath string, customHandler ...customHandler) gin.IRoutes {
+func (e *Engine) Handle(httpMethod, relativePath string, customHandlers ...any) gin.IRoutes {
 	handlers := make([]gin.HandlerFunc, 0)
-	for _, handler := range customHandler {
-		if err := e.validateController(handler); err != nil {
-			panic(err)
+	for _, handler := range customHandlers {
+		var ginHandlerFunc gin.HandlerFunc
+		name := util.GetFunctionName(handler)
+		if strings.Contains(name, "internal/controller") {
+			if err := e.validateController(handler); err != nil {
+				panic(err)
+			}
+			ginHandlerFunc = e.wrapperGin(handler)
+		} else {
+			ginHandlerFunc = handler.(gin.HandlerFunc)
 		}
-		handlers = append(handlers, e.wrapperGin(handler))
+		handlers = append(handlers, ginHandlerFunc)
 	}
 	return e.Engine.Handle(httpMethod, relativePath, handlers...)
 }
@@ -76,7 +82,7 @@ func (e *Engine) wrapperGin(handle any) gin.HandlerFunc {
 		// 在框架初始化的时候通过反射获取类型同时注册路由，这样就不需要在controller里每次获取参数映射，而变成了函数参数
 		var values []reflect.Value
 		values = append(values, reflect.ValueOf(c))
-		urlParams := parseUrlParams(c)
+		urlParams := e.parseUrlParams(c)
 		if len(urlParams) > 0 {
 			for index, urlParam := range urlParams {
 				arg := urlParam
@@ -84,14 +90,15 @@ func (e *Engine) wrapperGin(handle any) gin.HandlerFunc {
 				if urlParamsType[index] == reflect.Int {
 					arg, err = strconv.Atoi(urlParam.(string))
 					if err != nil {
-						panic(err)
+						MakeErrorResponse(c, err)
+						return
 					}
 				}
 				values = append(values, reflect.ValueOf(arg))
 			}
 		}
 		if bodyStruct != nil {
-			param, err := parseBodyToJsonStruct(c, bodyStruct)
+			param, err := e.parseBodyToJsonStruct(c, bodyStruct)
 			if err != nil {
 				return
 			}
@@ -100,17 +107,13 @@ func (e *Engine) wrapperGin(handle any) gin.HandlerFunc {
 		values = f.Call(values) // 执行控制器函数
 		err := values[1].Interface()
 		if err != nil {
-			e := err.(error)
-			makeErrorResponse(c, e)
+			errInterface := err.(error)
+			MakeErrorResponse(c, errInterface)
 			return
 		}
 		data := values[0].Interface().(map[string]any)
-		makeSuccessResponse(c, data)
+		MakeSuccessResponse(c, data)
 	}
-}
-
-func getFunctionName(i interface{}) string {
-	return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
 
 func (e *Engine) validateController(controller any) error {
@@ -118,7 +121,7 @@ func (e *Engine) validateController(controller any) error {
 	if t.Kind() != reflect.Func {
 		return nil
 	}
-	name := getFunctionName(controller)
+	name := util.GetFunctionName(controller)
 	if t.Kind() != reflect.Func {
 		return errors.New(name + " controller must be func")
 	}
@@ -148,7 +151,7 @@ func (e *Engine) validateController(controller any) error {
 	return nil
 }
 
-func parseUrlParams(c *gin.Context) []any {
+func (e *Engine) parseUrlParams(c *gin.Context) []any {
 	params := make([]any, 0)
 	for _, param := range c.Params {
 		params = append(params, param.Value)
@@ -156,7 +159,7 @@ func parseUrlParams(c *gin.Context) []any {
 	return params
 }
 
-func parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
+func (e *Engine) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
 	if err := c.ShouldBindJSON(&reqStruct); err != nil {
 		requestId, _ := c.Request.Context().Value("requestId").(string)
 		c.JSON(400, gin.H{
@@ -170,7 +173,7 @@ func parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
 	return reqStruct, nil
 }
 
-func makeSuccessResponse(c *gin.Context, data map[string]any) {
+func MakeSuccessResponse(c *gin.Context, data map[string]any) {
 	requestId, _ := c.Request.Context().Value("requestId").(string)
 	response := entity.Response{
 		RequestId: requestId,
@@ -180,7 +183,7 @@ func makeSuccessResponse(c *gin.Context, data map[string]any) {
 	c.JSON(200, response)
 }
 
-func makeErrorResponse(c *gin.Context, err error) {
+func MakeErrorResponse(c *gin.Context, err error) {
 	requestId, _ := c.Request.Context().Value("requestId").(string)
 	code := errors2.InternalServerErrorCode
 	var message string
@@ -207,11 +210,12 @@ func makeErrorResponse(c *gin.Context, err error) {
 }
 
 // GetEnginInstance .
-func GetEnginInstance() *Engine {
+func GetEnginInstance(middleware ...gin.HandlerFunc) *Engine {
 	if app == nil {
 		app = &Engine{
 			Engine: gin.Default(),
 		}
+		app.Use(middleware...)
 		return app
 	}
 	return app

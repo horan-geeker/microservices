@@ -6,8 +6,8 @@ import (
 )
 
 // Register .
-func (a *UserController) Register(c *gin.Context, params *api.RegisterParams) (map[string]any, error) {
-	user, token, err := a.logic.Auth().Register(c.Request.Context(), params.Name, params.Email, params.Phone, params.Password)
+func (u *UserController) Register(c *gin.Context, params *api.RegisterParams) (map[string]any, error) {
+	user, token, err := u.logic.Auth().Register(c.Request.Context(), params.Name, params.Email, params.Phone, params.Password)
 	if err != nil {
 		return nil, err
 	}

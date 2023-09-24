@@ -13,7 +13,7 @@ type user struct {
 }
 
 func (u *user) SetToken(ctx context.Context, id uint64, token string) error {
-	return u.rdb.WithContext(ctx).Set(token, fmt.Sprintf(consts.RedisUserTokenKey, id), consts.UserTokenExpiredIn).Err()
+	return u.rdb.WithContext(ctx).Set(fmt.Sprintf(consts.RedisUserTokenKey, id), token, consts.UserTokenExpiredIn).Err()
 }
 
 func (u *user) GetToken(ctx context.Context, id uint64) (string, error) {

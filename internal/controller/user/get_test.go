@@ -9,5 +9,5 @@ func TestUserController_GetUserinfo(t *testing.T) {
 
 	//mockLogic := logic.NewMockLogic(ctrl)
 	//mockUserLogic := logic.NewMockUserLogic(ctrl)
-	
+
 }

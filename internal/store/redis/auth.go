@@ -27,3 +27,18 @@ func (a *auth) GetSmsCode(ctx context.Context, uid uint64) (string, error) {
 func (a *auth) DeleteSmsCode(ctx context.Context, uid uint64) error {
 	return a.rdb.WithContext(ctx).Del(fmt.Sprintf(consts.RedisUserSmsKey, uid)).Err()
 }
+
+func (a *auth) GetEmailCode(ctx context.Context, uid uint64) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *auth) SetEmailCode(ctx context.Context, uid uint64, emailCode string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *auth) DeleteEmailCode(ctx context.Context, uid uint64) error {
+	//TODO implement me
+	panic("implement me")
+}

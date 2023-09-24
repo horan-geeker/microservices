@@ -1,4 +1,4 @@
-package errors
+package ecode
 
 import (
 	"errors"
@@ -40,15 +40,18 @@ func GetHttpStatusByErr(err error) int {
 var (
 	ErrInternalServerError = errors.New("系统内部错误")
 	ErrDataNotFound        = errors.New("数据不存在")
+	ErrRouteParamInvalid   = errors.New("路由参数无效")
 )
 
 const (
 	_ = iota
 	InternalServerErrorCode
 	DataNotFound
+	RouteParamInvalid
 )
 
 func init() {
 	Register(ErrInternalServerError, InternalServerErrorCode, http.StatusInternalServerError)
 	Register(ErrDataNotFound, DataNotFound, http.StatusNotFound)
+	Register(ErrRouteParamInvalid, RouteParamInvalid, http.StatusBadRequest)
 }

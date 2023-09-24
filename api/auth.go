@@ -2,11 +2,12 @@ package api
 
 // LoginParams .
 type LoginParams struct {
-	Name     *string `binding:"required_without_all=Email Phone" json:"name"`
-	Email    *string `binding:"required_without_all=Name Phone,omitempty,email" json:"email"`
-	Phone    *string `binding:"required_without_all=Email Name" json:"phone"`
-	Password *string `binding:"required_without=SmsCode" json:"password"`
-	SmsCode  *string `binding:"required_without=Password" json:"smsCode"`
+	Name      *string `binding:"required_without_all=Email Phone" json:"name"`
+	Email     *string `binding:"required_without_all=Name Phone,omitempty,email" json:"email"`
+	Phone     *string `binding:"required_without_all=Email Name" json:"phone"`
+	Password  *string `binding:"required_without=SmsCode" json:"password"`
+	SmsCode   *string `binding:"required_without=Password" json:"smsCode"`
+	EmailCode *string `binding:"required_without=Password" json:"emailCode"`
 }
 
 // ChangePasswordParams .

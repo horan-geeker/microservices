@@ -17,7 +17,7 @@ import (
 
 // AuthLogicInterface defines functions used to handle user api.
 type AuthLogicInterface interface {
-	Login(ctx context.Context, name, email, phone, password, smsCode *string) (*model.User, error)
+	Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*model.User, string, error)
 	Logout(ctx context.Context, uid uint64) error
 	Register(ctx context.Context, name, email, phone, password *string) (*model.User, string, error)
 	ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword, smsCode *string) error
@@ -25,6 +25,7 @@ type AuthLogicInterface interface {
 	VerifySmsCode(ctx context.Context, uid uint64, smsCode string) error
 	GeneratePasswordHash(password string) string
 	GenerateJWTToken(id uint64) (string, error)
+	GetAuthUser(token string) (*meta.AuthClaims, error)
 }
 
 type authLogic struct {
@@ -58,28 +59,39 @@ func (a *authLogic) GetUserByIdentity(ctx context.Context, name, email, phone *s
 }
 
 // Login .
-func (a *authLogic) Login(ctx context.Context, name, email, phone, password, smsCode *string) (*model.User, error) {
+func (a *authLogic) Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*model.User, string, error) {
 	user, err := a.GetUserByIdentity(ctx, name, email, phone)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if password != nil {
 		if !a.VerifyPassword(user.Password, *password) {
-			return nil, ecode.ErrInvalidPassword
+			return nil, "", ecode.ErrInvalidPassword
 		}
 	}
-	if smsCode != nil {
+	if phone != nil && smsCode != nil {
 		if err := a.VerifySmsCode(ctx, user.ID, *smsCode); err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	}
-	if err := a.cache.Users().SetToken(ctx, user.ID, ""); err != nil {
-		return nil, err
+	if email != nil && emailCode != nil {
+		if err := a.VerifyEmailCode(ctx, user.ID, *emailCode); err != nil {
+			return nil, "", err
+		}
 	}
-	a.store.Users().Update(ctx, user.ID, map[string]any{
+	token, err := a.GenerateJWTToken(user.ID)
+	if err != nil {
+		return nil, "", err
+	}
+	if err := a.cache.Users().SetToken(ctx, user.ID, token); err != nil {
+		return nil, "", err
+	}
+	if err := a.store.Users().Update(ctx, user.ID, map[string]any{
 		"login_at": time.Now(),
-	})
-	return user, nil
+	}); err != nil {
+		return nil, "", err
+	}
+	return user, token, nil
 }
 
 // Logout .
@@ -191,6 +203,21 @@ func (a *authLogic) VerifySmsCode(ctx context.Context, uid uint64, smsCode strin
 	return nil
 }
 
+// VerifyEmailCode .
+func (a *authLogic) VerifyEmailCode(ctx context.Context, uid uint64, emailCode string) error {
+	code, err := a.cache.Auth().GetEmailCode(ctx, uid)
+	if err != nil {
+		return err
+	}
+	if emailCode != code {
+		return ecode.ErrUserEmailCodeError
+	}
+	if err := a.cache.Auth().DeleteEmailCode(ctx, uid); err != nil {
+		return err
+	}
+	return nil
+}
+
 // GeneratePasswordHash .
 func (a *authLogic) GeneratePasswordHash(password string) string {
 	return util.MD5(password)
@@ -206,4 +233,12 @@ func (a *authLogic) GenerateJWTToken(id uint64) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 	opts := options.NewJwtOptions()
 	return token.SignedString([]byte(opts.Key))
+}
+
+func (a *authLogic) GetAuthUser(token string) (*meta.AuthClaims, error) {
+	authClaims, err := meta.ParseJWTToken(token)
+	if err != nil {
+		return nil, ecode.ErrTokenInvalid
+	}
+	return authClaims, nil
 }
