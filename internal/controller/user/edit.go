@@ -11,7 +11,7 @@ func (u *UserController) Edit(c *gin.Context, param *api.EditUserParam) (map[str
 	if len(token) == 0 {
 		return nil, ecode.ErrTokenIsEmpty
 	}
-	auth, err := u.logic.Auth().GetAuthUser(token)
+	auth, err := u.logic.Auth().GetAuthUser(c)
 	if err != nil {
 		return nil, err
 	}

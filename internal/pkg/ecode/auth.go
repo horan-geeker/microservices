@@ -17,6 +17,8 @@ var (
 	ErrTokenNotExist = errors.New("用户未登录，token不存在(已被注销)")
 	// ErrTokenDiscard  token已注销
 	ErrTokenDiscard = errors.New("用户未登录，token已注销")
+	// ErrTokenInternalNotSet  token路由未设置
+	ErrTokenInternalNotSet = errors.New("token路由未设置")
 )
 
 const (
@@ -31,6 +33,8 @@ const (
 	TokenNotExist
 	// TokenDiscard  token已注销
 	TokenDiscard
+	// TokenInternalNotSet  token路由未设置
+	TokenInternalNotSet
 )
 
 func init() {
@@ -39,4 +43,5 @@ func init() {
 	errors2.Register(ErrTokenExpired, TokenExpired, http.StatusUnauthorized)
 	errors2.Register(ErrTokenNotExist, TokenNotExist, http.StatusUnauthorized)
 	errors2.Register(ErrTokenDiscard, TokenDiscard, http.StatusUnauthorized)
+	errors2.Register(ErrTokenInternalNotSet, TokenInternalNotSet, http.StatusInternalServerError)
 }

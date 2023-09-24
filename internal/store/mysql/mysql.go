@@ -11,12 +11,12 @@ import (
 	"net/url"
 )
 
-type mysqlStore struct {
+type mysqlInstance struct {
 	db *gorm.DB
 }
 
 // Users .
-func (s *mysqlStore) Users() store.UserStore {
+func (s *mysqlInstance) Users() store.UserStore {
 	return newUsers(s)
 }
 
@@ -42,5 +42,5 @@ func GetMysqlInstance(opts *options.MySQLOptions) store.DataFactory {
 		SetMaxIdleConns(opts.MaxIdleConnections).
 		SetMaxOpenConns(opts.MaxOpenConnections),
 	)
-	return &mysqlStore{db: writeDB}
+	return &mysqlInstance{db: writeDB}
 }

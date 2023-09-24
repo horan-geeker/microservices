@@ -19,4 +19,5 @@ type UserStore interface {
 type UserCache interface {
 	SetToken(ctx context.Context, uid uint64, token string) error
 	GetToken(ctx context.Context, uid uint64) (string, error)
+	DeleteToken(ctx context.Context, uid uint64) error
 }

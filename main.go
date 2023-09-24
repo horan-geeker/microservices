@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"microservices/internal/config"
 	_ "microservices/internal/config"
 	_ "microservices/internal/router"
@@ -23,6 +24,7 @@ func main() {
 	} else {
 		gin.SetMode(gin.DebugMode)
 	}
+	gin.DefaultWriter = io.Discard
 	app := meta.GetEnginInstance()
 	log.Info("server run ", env.ServerHost, ":", env.ServerPort)
 	if err := app.Run(fmt.Sprintf("%s:%d", env.ServerHost, env.ServerPort)); err != nil {

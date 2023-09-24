@@ -35,22 +35,25 @@ func RequestLogger(c *gin.Context) {
 	buf, _ := io.ReadAll(c.Request.Body)
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
 
-	requestId := c.Request.Header.Get("requestId")
-	if requestId == "" {
-		// 服务端生成的 request_id 增加 auto 前缀
-		requestId = "auto" + strconv.Itoa(rand.Intn(999999-100000)+100000)
+	traceId := c.Request.Header.Get("traceId")
+	spanId := c.Request.Header.Get("spanId")
+	if spanId == "" {
+		// 服务端生成的 spanId 增加 auto 前缀
+		spanId = "auto" + strconv.Itoa(rand.Intn(999999-100000)+100000)
 	}
-
-	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "requestId", requestId))
+	ctx := context.WithValue(c.Request.Context(), "spanId", spanId)
+	ctx = context.WithValue(ctx, "traceId", traceId)
+	c.Request = c.Request.WithContext(ctx)
 
 	log.WithFields(log.Fields{
-		"method":    c.Request.Method,
-		"url":       c.Request.URL.Host + c.Request.URL.String(),
-		"ip":        c.Request.Header.Get("x-forwarded-for"),
-		"requestId": requestId,
-		"body":      string(buf),
-		"event":     "api",
-		"header":    c.Request.Header,
+		"method":  c.Request.Method,
+		"url":     c.Request.URL.Host + c.Request.URL.String(),
+		"ip":      c.Request.Header.Get("x-forwarded-for"),
+		"traceId": traceId,
+		"spanId":  spanId,
+		"body":    string(buf),
+		"event":   "api",
+		"header":  c.Request.Header,
 	}).Info()
 
 	blw := &bodyLogWriter{body: bytes.NewBufferString(""), ResponseWriter: c.Writer}
@@ -66,7 +69,8 @@ func RequestLogger(c *gin.Context) {
 	log.WithFields(log.Fields{
 		"method":     c.Request.Method,
 		"url":        c.Request.URL.Host + c.Request.URL.String(),
-		"requestId":  requestId,
+		"traceId":    traceId,
+		"spanId":     spanId,
 		"httpStatus": c.Writer.Status(),
 		"timeCost":   time.Since(begin).Milliseconds(),
 		"event":      "response",

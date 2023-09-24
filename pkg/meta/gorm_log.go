@@ -46,14 +46,17 @@ func (l gormLogger) Trace(ctx context.Context, begin time.Time, fc func() (strin
 	if l.LogLevel <= logger.Silent {
 		return
 	}
-	requestId, _ := ctx.Value("requestId").(string)
+	traceId, _ := ctx.Value("traceId").(string)
+	spanId, _ := ctx.Value("spanId").(string)
 	elapsed := time.Since(begin)
 	sql, rows := fc()
 	l.Logger.WithFields(logrus.Fields{
-		"requestId": requestId,
-		"sql":       sql,
-		"rows":      rows,
-		"timeCost":  elapsed.Milliseconds(),
+		"traceId":  traceId,
+		"spanId":   spanId,
+		"sql":      sql,
+		"rows":     rows,
+		"timeCost": elapsed.Milliseconds(),
+		"event":    "mysql",
 	}).Info()
 }
 
@@ -61,7 +64,6 @@ func NewGormCustomLogger(logLevel logger.LogLevel) logger.Interface {
 	log := logrus.New()
 	log.SetOutput(os.Stdout)
 	log.SetFormatter(&logrus.JSONFormatter{})
-	log.WithField("event", "mysql-query")
 	return &gormLogger{
 		log,
 		logger.Config{

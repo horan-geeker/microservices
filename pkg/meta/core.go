@@ -86,12 +86,14 @@ func (e *Engine) wrapperGin(handle any) gin.HandlerFunc {
 		if len(urlParams) > 0 {
 			for index, urlParam := range urlParams {
 				arg := urlParam
-				var err error
-				if urlParamsType[index] == reflect.Int {
-					arg, err = strconv.Atoi(urlParam.(string))
+				if urlParamsType[index] == reflect.Uint64 || urlParamsType[index] == reflect.Int {
+					intId, err := strconv.Atoi(urlParam.(string))
 					if err != nil {
 						MakeErrorResponse(c, err)
 						return
+					}
+					if urlParamsType[index] == reflect.Uint64 {
+						arg = uint64(intId)
 					}
 				}
 				values = append(values, reflect.ValueOf(arg))
@@ -161,12 +163,14 @@ func (e *Engine) parseUrlParams(c *gin.Context) []any {
 
 func (e *Engine) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
 	if err := c.ShouldBindJSON(&reqStruct); err != nil {
-		requestId, _ := c.Request.Context().Value("requestId").(string)
+		traceId, _ := c.Request.Context().Value("traceId").(string)
+		spanId, _ := c.Request.Context().Value("spanId").(string)
 		c.JSON(400, gin.H{
-			"request_id": requestId,
-			"code":       400,
-			"message":    err.Error(),
-			"data":       nil,
+			"traceId": traceId,
+			"spanId":  spanId,
+			"code":    400,
+			"message": err.Error(),
+			"data":    nil,
 		})
 		return nil, err
 	}
@@ -174,17 +178,20 @@ func (e *Engine) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, erro
 }
 
 func MakeSuccessResponse(c *gin.Context, data map[string]any) {
-	requestId, _ := c.Request.Context().Value("requestId").(string)
+	traceId, _ := c.Request.Context().Value("traceId").(string)
+	spanId, _ := c.Request.Context().Value("spanId").(string)
 	response := entity.Response{
-		RequestId: requestId,
-		Data:      data,
-		Code:      0,
+		TraceId: traceId,
+		SpanId:  spanId,
+		Data:    data,
+		Code:    0,
 	}
 	c.JSON(200, response)
 }
 
 func MakeErrorResponse(c *gin.Context, err error) {
-	requestId, _ := c.Request.Context().Value("requestId").(string)
+	traceId, _ := c.Request.Context().Value("traceId").(string)
+	spanId, _ := c.Request.Context().Value("spanId").(string)
 	code := errors2.InternalServerErrorCode
 	var message string
 	httpStatus := http.StatusInternalServerError
@@ -202,10 +209,11 @@ func MakeErrorResponse(c *gin.Context, err error) {
 		message = err.Error()
 	}
 	c.JSON(httpStatus, gin.H{
-		"request_id": requestId,
-		"code":       code,
-		"message":    message,
-		"data":       nil,
+		"traceId": traceId,
+		"spanId":  spanId,
+		"code":    code,
+		"message": message,
+		"data":    nil,
 	})
 }
 

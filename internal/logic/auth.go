@@ -25,7 +25,7 @@ type AuthLogicInterface interface {
 	VerifySmsCode(ctx context.Context, uid uint64, smsCode string) error
 	GeneratePasswordHash(password string) string
 	GenerateJWTToken(id uint64) (string, error)
-	GetAuthUser(token string) (*meta.AuthClaims, error)
+	GetAuthUser(ctx context.Context) (*meta.AuthClaims, error)
 }
 
 type authLogic struct {
@@ -96,6 +96,9 @@ func (a *authLogic) Login(ctx context.Context, name, email, phone, password, sms
 
 // Logout .
 func (a *authLogic) Logout(ctx context.Context, uid uint64) error {
+	if err := a.cache.Users().DeleteToken(ctx, uid); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -235,10 +238,14 @@ func (a *authLogic) GenerateJWTToken(id uint64) (string, error) {
 	return token.SignedString([]byte(opts.Key))
 }
 
-func (a *authLogic) GetAuthUser(token string) (*meta.AuthClaims, error) {
-	authClaims, err := meta.ParseJWTToken(token)
-	if err != nil {
-		return nil, ecode.ErrTokenInvalid
+func (a *authLogic) GetAuthUser(ctx context.Context) (*meta.AuthClaims, error) {
+	authValue := ctx.Value("auth")
+	if authValue == nil {
+		return nil, ecode.ErrTokenInternalNotSet
+	}
+	authClaims, ok := authValue.(*meta.AuthClaims)
+	if !ok {
+		return nil, ecode.ErrTokenInternalNotSet
 	}
 	return authClaims, nil
 }

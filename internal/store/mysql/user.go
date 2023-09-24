@@ -12,7 +12,7 @@ type users struct {
 	db *gorm.DB
 }
 
-func newUsers(s *mysqlStore) store.UserStore {
+func newUsers(s *mysqlInstance) store.UserStore {
 	return &users{
 		db: s.db,
 	}

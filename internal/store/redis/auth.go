@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis"
+	"github.com/redis/go-redis/v9"
 	"microservices/internal/pkg/consts"
 	"time"
 )
@@ -12,20 +12,20 @@ type auth struct {
 	rdb *redis.Client
 }
 
-func newAuth(s *redisStore) *auth {
+func newAuth(s *redisInstance) *auth {
 	return &auth{rdb: s.rdb}
 }
 
 func (a *auth) SetSmsCode(ctx context.Context, uid uint64, smsCode string) error {
-	return a.rdb.WithContext(ctx).Set(fmt.Sprintf(consts.RedisUserSmsKey, uid), smsCode, time.Minute).Err()
+	return a.rdb.Set(ctx, fmt.Sprintf(consts.RedisUserSmsKey, uid), smsCode, time.Minute).Err()
 }
 
 func (a *auth) GetSmsCode(ctx context.Context, uid uint64) (string, error) {
-	return a.rdb.WithContext(ctx).Get(fmt.Sprintf(consts.RedisUserSmsKey, uid)).Result()
+	return a.rdb.Get(ctx, fmt.Sprintf(consts.RedisUserSmsKey, uid)).Result()
 }
 
 func (a *auth) DeleteSmsCode(ctx context.Context, uid uint64) error {
-	return a.rdb.WithContext(ctx).Del(fmt.Sprintf(consts.RedisUserSmsKey, uid)).Err()
+	return a.rdb.Del(ctx, fmt.Sprintf(consts.RedisUserSmsKey, uid)).Err()
 }
 
 func (a *auth) GetEmailCode(ctx context.Context, uid uint64) (string, error) {

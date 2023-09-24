@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"bytes"
+	"context"
 	"github.com/gin-gonic/gin"
+	redis2 "github.com/redis/go-redis/v9"
 	"io"
 	"microservices/internal/pkg/ecode"
 	"microservices/internal/pkg/options"
@@ -11,6 +13,7 @@ import (
 )
 
 func Authenticate() gin.HandlerFunc {
+	cache := redis.GetRedisInstance(options.NewRedisOptions())
 	return func(c *gin.Context) {
 		buf, _ := io.ReadAll(c.Request.Body)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
@@ -27,9 +30,13 @@ func Authenticate() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		cache := redis.GetRedisInstance(options.NewRedisOptions())
 		// 判断是否被注销
 		token, err := cache.Users().GetToken(c.Request.Context(), authClaims.Uid)
+		if err == redis2.Nil {
+			meta.MakeErrorResponse(c, ecode.ErrTokenDiscard)
+			c.Abort()
+			return
+		}
 		if err != nil {
 			meta.MakeErrorResponse(c, err)
 			c.Abort()
@@ -40,5 +47,6 @@ func Authenticate() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), "auth", authClaims))
 	}
 }
