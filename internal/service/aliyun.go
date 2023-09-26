@@ -4,17 +4,26 @@ import (
 	"encoding/json"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
 	log "github.com/sirupsen/logrus"
-	"microservices/internal/config"
 )
 
-type templateJson struct {
-	Code string `json:"code"`
+type Aliyun interface {
+	SendSMSCode(phone string, code string) error
 }
 
-// SendSMSCodeByAliyun .
-func SendSMSCodeByAliyun(phone string, code string) error {
-	client, err := dysmsapi.NewClientWithAccessKey("cn-hangzhou",
-		config.Env.AliyunAccessKeyId, config.Env.AliyunAccessKeySecret)
+type aliyun struct {
+	accessKeyId     string
+	accessKeySecret string
+	SmsSignName     string
+	SmsTemplateCode string
+}
+
+// SendSMSCode .
+func (a *aliyun) SendSMSCode(phone string, code string) error {
+	client, err := dysmsapi.NewClientWithAccessKey("cn-hangzhou", a.accessKeyId, a.accessKeySecret)
+
+	type templateJson struct {
+		Code string `json:"code"`
+	}
 
 	template := templateJson{code}
 	templateStr, err := json.Marshal(template)
@@ -22,8 +31,8 @@ func SendSMSCodeByAliyun(phone string, code string) error {
 	request := dysmsapi.CreateSendSmsRequest()
 	request.Scheme = "http"
 	request.PhoneNumbers = phone
-	request.SignName = config.Env.AliyunSmsSignName
-	request.TemplateCode = config.Env.AliyunSmsTemplateCode
+	request.SignName = a.SmsSignName
+	request.TemplateCode = a.SmsTemplateCode
 	request.TemplateParam = string(templateStr)
 
 	response, err := client.SendSms(request)
@@ -32,4 +41,13 @@ func SendSMSCodeByAliyun(phone string, code string) error {
 		return err
 	}
 	return nil
+}
+
+func newAliyun(accessKey, accessSecret, smsSignName, smsTemplateCode string) Aliyun {
+	return &aliyun{
+		accessKeyId:     accessKey,
+		accessKeySecret: accessSecret,
+		SmsSignName:     smsSignName,
+		SmsTemplateCode: smsTemplateCode,
+	}
 }

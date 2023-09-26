@@ -1,6 +1,9 @@
 package logic
 
-import "microservices/internal/store"
+import (
+	"microservices/internal/service"
+	"microservices/internal/store"
+)
 
 // LogicInterface defines functions used to return resource interface.
 type LogicInterface interface {
@@ -11,6 +14,7 @@ type LogicInterface interface {
 type logic struct {
 	store store.DataFactory
 	cache store.CacheFactory
+	srv   service.ServiceFactory
 }
 
 func (l *logic) Users() UserLogicInterface {
@@ -22,6 +26,6 @@ func (l *logic) Auth() AuthLogicInterface {
 }
 
 // NewLogic .
-func NewLogic(store store.DataFactory, cache store.CacheFactory) LogicInterface {
-	return &logic{store: store, cache: cache}
+func NewLogic(store store.DataFactory, cache store.CacheFactory, srv service.ServiceFactory) LogicInterface {
+	return &logic{store: store, cache: cache, srv: srv}
 }

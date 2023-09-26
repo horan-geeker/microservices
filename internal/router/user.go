@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	userController := user.NewUserController(dataFactory, cacheFactory)
+	userController := user.NewUserController(dataFactory, cacheFactory, serviceFactory)
 	router.GET("/users/:id", userController.Get)
 	router.POST("/users/edit", middleware.Authenticate(), userController.Edit)
 }

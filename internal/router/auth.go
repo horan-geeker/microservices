@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	authController := auth.NewAuthController(dataFactory, cacheFactory)
+	authController := auth.NewAuthController(dataFactory, cacheFactory, serviceFactory)
 	router.POST("/auth/login", authController.Login)
 	router.POST("/auth/logout", middleware.Authenticate(), authController.Logout)
 	router.POST("/auth/change-password", middleware.Authenticate(), authController.ChangePassword)

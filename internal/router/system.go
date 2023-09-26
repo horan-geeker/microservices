@@ -5,5 +5,6 @@ import (
 )
 
 func init() {
-	router.GET("/system/health", system.Health)
+	systemController := system.NewSystemController(dataFactory, cacheFactory, serviceFactory)
+	router.GET("/system/health", systemController.Health)
 }
