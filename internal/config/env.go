@@ -21,8 +21,8 @@ type EnvConfig struct {
 	RedisPort     int    `mapstructure:"REDIS_PORT" default:"6379"`
 	RedisDB       int    `mapstructure:"REDIS_DB" default:"0"`
 
-	MailServerAddress  string `mapstructure:"MAIL_SERVER_ADDRESS"`
-	MailServerPassword string `mapstructure:"MAIL_SERVER_PASSWORD"`
+	TencentMailServerAddress  string `mapstructure:"TENCENT_MAIL_SERVER_ADDRESS"`
+	TencentMailServerPassword string `mapstructure:"TENCENT_MAIL_SERVER_PASSWORD"`
 
 	AliyunAccessKeyId     string `mapstructure:"ALIYUN_ACCESS_KEY_ID"`
 	AliyunAccessKeySecret string `mapstructure:"ALIYUN_ACCESS_KEY_SECRET"`

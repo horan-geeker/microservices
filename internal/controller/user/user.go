@@ -2,6 +2,7 @@ package user
 
 import (
 	"microservices/internal/logic"
+	"microservices/internal/service"
 	"microservices/internal/store"
 )
 
@@ -10,8 +11,8 @@ type UserController struct {
 }
 
 // NewUserController .
-func NewUserController(store store.DataFactory, cache store.CacheFactory) *UserController {
+func NewUserController(store store.DataFactory, cache store.CacheFactory, srv service.ServiceFactory) *UserController {
 	return &UserController{
-		logic: logic.NewLogic(store, cache),
+		logic: logic.NewLogic(store, cache, srv),
 	}
 }
