@@ -8,7 +8,7 @@ import (
 	"microservices/internal/config"
 	_ "microservices/internal/config"
 	_ "microservices/internal/router"
-	"microservices/pkg/meta"
+	"microservices/pkg/app"
 	"os"
 )
 
@@ -25,9 +25,9 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	}
 	gin.DefaultWriter = io.Discard
-	app := meta.GetEnginInstance()
+	server := app.NewApp(app.NewServerOptions(3))
 	log.Info("server run ", env.ServerHost, ":", env.ServerPort)
-	if err := app.Run(fmt.Sprintf("%s:%d", env.ServerHost, env.ServerPort)); err != nil {
+	if err := server.Run(fmt.Sprintf("%s:%d", env.ServerHost, env.ServerPort)); err != nil {
 		panic(err)
 	}
 }

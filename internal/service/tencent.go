@@ -33,9 +33,9 @@ func (t *tencent) SendMailTo(mailTo string, from string, title string, content s
 	return nil
 }
 
-func newTencent(mailServerAddress, mailServerPassword string) Tencent {
+func newTencent(srv *serviceInstance) Tencent {
 	return &tencent{
-		mailServerAddress:  mailServerAddress,
-		mailServerPassword: mailServerPassword,
+		mailServerAddress:  srv.tencentOptions.MailServerAddress,
+		mailServerPassword: srv.tencentOptions.MailServerPassword,
 	}
 }

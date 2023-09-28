@@ -6,7 +6,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"microservices/internal/pkg/options"
 	"microservices/internal/store"
-	"microservices/pkg/meta"
+	"microservices/pkg/log"
 )
 
 var redisFactory store.CacheFactory
@@ -33,7 +33,7 @@ func GetRedisInstance(opts *options.RedisOptions) store.CacheFactory {
 		Password: opts.Password,
 		DB:       opts.DB,
 	})
-	conn.AddHook(meta.NewRedisLogHook())
+	conn.AddHook(log.NewRedisLogHook())
 	_, err := conn.Ping(context.Background()).Result()
 	if err != nil {
 		panic(err)

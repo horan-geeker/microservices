@@ -12,9 +12,15 @@ type LoginParams struct {
 
 // ChangePasswordParams .
 type ChangePasswordParams struct {
-	OldPassword *string `binding:"required_without=SmsCode" json:"oldPassword,omitempty"`
-	SmsCode     *string `binding:"required_without=OldPassword" json:"smsCode,omitempty"`
-	NewPassword string  `binding:"required" json:"newPassword"`
+	OldPassword string `binding:"required" json:"oldPassword"`
+	NewPassword string `binding:"required" json:"newPassword"`
+}
+
+// ChangePasswordByPhoneParams .
+type ChangePasswordByPhoneParams struct {
+	Phone       string `binding:"required" json:"phone"`
+	SmsCode     string `binding:"required" json:"smsCode"`
+	NewPassword string `binding:"required" json:"newPassword"`
 }
 
 // RegisterParams .

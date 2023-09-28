@@ -9,12 +9,17 @@ import (
 type LogicInterface interface {
 	Users() UserLogicInterface
 	Auth() AuthLogicInterface
+	Notify() NotifyLogicInterface
 }
 
 type logic struct {
 	store store.DataFactory
 	cache store.CacheFactory
 	srv   service.ServiceFactory
+}
+
+func (l *logic) Notify() NotifyLogicInterface {
+	return newNotify(l)
 }
 
 func (l *logic) Users() UserLogicInterface {

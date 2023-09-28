@@ -20,9 +20,10 @@ type AuthLogicInterface interface {
 	Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*model.User, string, error)
 	Logout(ctx context.Context, uid uint64) error
 	Register(ctx context.Context, name, email, phone, password *string) (*model.User, string, error)
-	ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword, smsCode *string) error
+	ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword *string) error
+	ChangePasswordByPhone(ctx context.Context, newPassword, phone, smsCode string) error
 	VerifyPassword(password string, inputPasswd string) bool
-	VerifySmsCode(ctx context.Context, uid uint64, smsCode string) error
+	VerifySmsCode(ctx context.Context, phone string, smsCode string) error
 	GeneratePasswordHash(password string) string
 	GenerateJWTToken(id uint64) (string, error)
 	GetAuthUser(ctx context.Context) (*meta.AuthClaims, error)
@@ -70,7 +71,7 @@ func (a *authLogic) Login(ctx context.Context, name, email, phone, password, sms
 		}
 	}
 	if phone != nil && smsCode != nil {
-		if err := a.VerifySmsCode(ctx, user.ID, *smsCode); err != nil {
+		if err := a.VerifySmsCode(ctx, user.Phone, *smsCode); err != nil {
 			return nil, "", err
 		}
 	}
@@ -160,7 +161,7 @@ func (a *authLogic) Register(ctx context.Context, name, email, phone, password *
 }
 
 // ChangePassword .
-func (a *authLogic) ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword *string, smsCode *string) error {
+func (a *authLogic) ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword *string) error {
 	if oldPassword != nil {
 		user, err := a.store.Users().GetByUid(ctx, uid)
 		if err != nil {
@@ -170,12 +171,24 @@ func (a *authLogic) ChangePassword(ctx context.Context, uid uint64, newPassword 
 			return ecode.ErrInvalidPassword
 		}
 	}
-	if smsCode != nil {
-		if err := a.VerifySmsCode(ctx, uid, *smsCode); err != nil {
-			return err
-		}
-	}
 	if err := a.store.Users().Update(ctx, uid, map[string]any{
+		"password": a.GeneratePasswordHash(newPassword),
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ChangePasswordByPhone .
+func (a *authLogic) ChangePasswordByPhone(ctx context.Context, newPassword, phone, smsCode string) error {
+	if err := a.VerifySmsCode(ctx, phone, smsCode); err != nil {
+		return err
+	}
+	user, err := a.store.Users().GetByPhone(ctx, phone)
+	if err != nil {
+		return err
+	}
+	if err := a.store.Users().Update(ctx, user.ID, map[string]any{
 		"password": a.GeneratePasswordHash(newPassword),
 	}); err != nil {
 		return err
@@ -192,15 +205,15 @@ func (a *authLogic) VerifyPassword(password string, inputPasswd string) bool {
 }
 
 // VerifySmsCode .
-func (a *authLogic) VerifySmsCode(ctx context.Context, uid uint64, smsCode string) error {
-	code, err := a.cache.Auth().GetSmsCode(ctx, uid)
+func (a *authLogic) VerifySmsCode(ctx context.Context, phone string, smsCode string) error {
+	code, err := a.cache.Auth().GetSmsCode(ctx, phone)
 	if err != nil {
 		return err
 	}
 	if smsCode != code {
 		return ecode.ErrUserSmsCodeError
 	}
-	if err := a.cache.Auth().DeleteSmsCode(ctx, uid); err != nil {
+	if err := a.cache.Auth().DeleteSmsCode(ctx, phone); err != nil {
 		return err
 	}
 	return nil

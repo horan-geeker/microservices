@@ -11,7 +11,7 @@ func (a *AuthController) ChangePassword(c *gin.Context, param *api.ChangePasswor
 	if err != nil {
 		return nil, err
 	}
-	if err := a.logic.Auth().ChangePassword(c.Request.Context(), auth.Uid, param.NewPassword, param.OldPassword, param.SmsCode); err != nil {
+	if err := a.logic.Auth().ChangePassword(c.Request.Context(), auth.Uid, param.NewPassword, param.OldPassword); err != nil {
 		return nil, err
 	}
 	return nil, nil
