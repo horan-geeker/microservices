@@ -13,9 +13,9 @@ type LogicInterface interface {
 }
 
 type logic struct {
-	store store.DataFactory
+	store store.Factory
 	cache store.CacheFactory
-	srv   service.ServiceFactory
+	srv   service.Factory
 }
 
 func (l *logic) Notify() NotifyLogicInterface {
@@ -31,6 +31,6 @@ func (l *logic) Auth() AuthLogicInterface {
 }
 
 // NewLogic .
-func NewLogic(store store.DataFactory, cache store.CacheFactory, srv service.ServiceFactory) LogicInterface {
+func NewLogic(store store.Factory, cache store.CacheFactory, srv service.Factory) LogicInterface {
 	return &logic{store: store, cache: cache, srv: srv}
 }

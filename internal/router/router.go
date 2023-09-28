@@ -11,7 +11,7 @@ import (
 	"microservices/pkg/app"
 )
 
-var dataFactory = mysql.GetMysqlInstance(options.NewMySQLOptions())
+var dataFactory = mysql.GetMysqlInstance(options.NewMysqlOptions())
 var cacheFactory = redis.GetRedisInstance(options.NewRedisOptions())
 var serviceFactory = service.GetServiceInstance(options.NewTencentOptions(), options.NewAliyunOptions())
 

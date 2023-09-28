@@ -5,9 +5,9 @@ import (
 	"errors"
 	"github.com/golang-jwt/jwt"
 	"gorm.io/gorm"
-	"microservices/internal/model"
 	"microservices/internal/pkg/consts"
 	"microservices/internal/pkg/ecode"
+	meta2 "microservices/internal/pkg/meta"
 	"microservices/internal/pkg/options"
 	"microservices/internal/store"
 	"microservices/pkg/meta"
@@ -17,10 +17,10 @@ import (
 
 // AuthLogicInterface defines functions used to handle user api.
 type AuthLogicInterface interface {
-	Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*model.User, string, error)
+	Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*meta2.User, string, error)
 	Logout(ctx context.Context, uid uint64) error
-	Register(ctx context.Context, name, email, phone, password *string) (*model.User, string, error)
-	ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword *string) error
+	Register(ctx context.Context, name, email, phone, password *string) (*meta2.User, string, error)
+	ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword string) error
 	ChangePasswordByPhone(ctx context.Context, newPassword, phone, smsCode string) error
 	VerifyPassword(password string, inputPasswd string) bool
 	VerifySmsCode(ctx context.Context, phone string, smsCode string) error
@@ -30,7 +30,7 @@ type AuthLogicInterface interface {
 }
 
 type authLogic struct {
-	store store.DataFactory
+	store store.Factory
 	cache store.CacheFactory
 }
 
@@ -42,11 +42,11 @@ func newAuth(l *logic) AuthLogicInterface {
 }
 
 // GetUserByIdentity .
-func (a *authLogic) GetUserByIdentity(ctx context.Context, name, email, phone *string) (*model.User, error) {
+func (a *authLogic) GetUserByIdentity(ctx context.Context, name, email, phone *string) (*meta2.User, error) {
 	if name == nil && email == nil && phone == nil {
 		return nil, errors.New("必须传入一个标识用户的参数")
 	}
-	var user *model.User
+	var user *meta2.User
 	var err error
 	switch {
 	case name != nil:
@@ -60,7 +60,7 @@ func (a *authLogic) GetUserByIdentity(ctx context.Context, name, email, phone *s
 }
 
 // Login .
-func (a *authLogic) Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*model.User, string, error) {
+func (a *authLogic) Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*meta2.User, string, error) {
 	user, err := a.GetUserByIdentity(ctx, name, email, phone)
 	if err != nil {
 		return nil, "", err
@@ -76,7 +76,7 @@ func (a *authLogic) Login(ctx context.Context, name, email, phone, password, sms
 		}
 	}
 	if email != nil && emailCode != nil {
-		if err := a.VerifyEmailCode(ctx, user.ID, *emailCode); err != nil {
+		if err := a.VerifyEmailCode(ctx, user.Email, *emailCode); err != nil {
 			return nil, "", err
 		}
 	}
@@ -104,7 +104,7 @@ func (a *authLogic) Logout(ctx context.Context, uid uint64) error {
 }
 
 // Register .
-func (a *authLogic) Register(ctx context.Context, name, email, phone, password *string) (*model.User, string, error) {
+func (a *authLogic) Register(ctx context.Context, name, email, phone, password *string) (*meta2.User, string, error) {
 	var userName, userEmail, userPhone, userpPassword string
 	if name != nil {
 		userName = *name
@@ -139,7 +139,7 @@ func (a *authLogic) Register(ctx context.Context, name, email, phone, password *
 	if password != nil {
 		userpPassword = *password
 	}
-	user := &model.User{
+	user := &meta2.User{
 		Name:     userName,
 		Email:    userEmail,
 		Phone:    userPhone,
@@ -161,15 +161,13 @@ func (a *authLogic) Register(ctx context.Context, name, email, phone, password *
 }
 
 // ChangePassword .
-func (a *authLogic) ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword *string) error {
-	if oldPassword != nil {
-		user, err := a.store.Users().GetByUid(ctx, uid)
-		if err != nil {
-			return err
-		}
-		if !a.VerifyPassword(user.Password, *oldPassword) {
-			return ecode.ErrInvalidPassword
-		}
+func (a *authLogic) ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword string) error {
+	user, err := a.store.Users().GetByUid(ctx, uid)
+	if err != nil {
+		return err
+	}
+	if !a.VerifyPassword(user.Password, oldPassword) {
+		return ecode.ErrInvalidPassword
 	}
 	if err := a.store.Users().Update(ctx, uid, map[string]any{
 		"password": a.GeneratePasswordHash(newPassword),
@@ -220,15 +218,15 @@ func (a *authLogic) VerifySmsCode(ctx context.Context, phone string, smsCode str
 }
 
 // VerifyEmailCode .
-func (a *authLogic) VerifyEmailCode(ctx context.Context, uid uint64, emailCode string) error {
-	code, err := a.cache.Auth().GetEmailCode(ctx, uid)
+func (a *authLogic) VerifyEmailCode(ctx context.Context, email string, code string) error {
+	cachedCode, err := a.cache.Auth().GetEmailCode(ctx, code)
 	if err != nil {
 		return err
 	}
-	if emailCode != code {
+	if cachedCode != code {
 		return ecode.ErrUserEmailCodeError
 	}
-	if err := a.cache.Auth().DeleteEmailCode(ctx, uid); err != nil {
+	if err := a.cache.Auth().DeleteEmailCode(ctx, email); err != nil {
 		return err
 	}
 	return nil

@@ -12,7 +12,7 @@ type NotifyLogicInterface interface {
 
 type notifyLogic struct {
 	cache store.CacheFactory
-	srv   service.ServiceFactory
+	srv   service.Factory
 }
 
 func (n *notifyLogic) SendSmsCode(ctx context.Context, phone string, code string) error {

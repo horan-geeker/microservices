@@ -38,7 +38,7 @@ func (a *auth) SetEmailCode(ctx context.Context, email string, emailCode string)
 	panic("implement me")
 }
 
-func (a *auth) DeleteEmailCode(ctx context.Context, email uint64) error {
+func (a *auth) DeleteEmailCode(ctx context.Context, email string) error {
 	//TODO implement me
 	panic("implement me")
 }

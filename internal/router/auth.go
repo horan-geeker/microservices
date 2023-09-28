@@ -10,4 +10,5 @@ func init() {
 	router.POST("/auth/login", authController.Login)
 	router.POST("/auth/logout", middleware.Authenticate(), authController.Logout)
 	router.POST("/auth/change-password", middleware.Authenticate(), authController.ChangePassword)
+	router.POST("/auth/change-password-by-phone", authController.ChangePasswordByPhone)
 }
