@@ -7,19 +7,18 @@ import (
 	"gorm.io/gorm"
 	"microservices/internal/pkg/consts"
 	"microservices/internal/pkg/ecode"
-	meta2 "microservices/internal/pkg/meta"
+	"microservices/internal/pkg/meta"
 	"microservices/internal/pkg/options"
 	"microservices/internal/store"
-	"microservices/pkg/meta"
 	"microservices/pkg/util"
 	"time"
 )
 
 // AuthLogicInterface defines functions used to handle user api.
 type AuthLogicInterface interface {
-	Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*meta2.User, string, error)
+	Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*meta.User, string, error)
 	Logout(ctx context.Context, uid uint64) error
-	Register(ctx context.Context, name, email, phone, password *string) (*meta2.User, string, error)
+	Register(ctx context.Context, name, email, phone, password *string) (*meta.User, string, error)
 	ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword string) error
 	ChangePasswordByPhone(ctx context.Context, newPassword, phone, smsCode string) error
 	VerifyPassword(password string, inputPasswd string) bool
@@ -42,11 +41,11 @@ func newAuth(l *logic) AuthLogicInterface {
 }
 
 // GetUserByIdentity .
-func (a *authLogic) GetUserByIdentity(ctx context.Context, name, email, phone *string) (*meta2.User, error) {
+func (a *authLogic) GetUserByIdentity(ctx context.Context, name, email, phone *string) (*meta.User, error) {
 	if name == nil && email == nil && phone == nil {
 		return nil, errors.New("必须传入一个标识用户的参数")
 	}
-	var user *meta2.User
+	var user *meta.User
 	var err error
 	switch {
 	case name != nil:
@@ -60,7 +59,7 @@ func (a *authLogic) GetUserByIdentity(ctx context.Context, name, email, phone *s
 }
 
 // Login .
-func (a *authLogic) Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*meta2.User, string, error) {
+func (a *authLogic) Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*meta.User, string, error) {
 	user, err := a.GetUserByIdentity(ctx, name, email, phone)
 	if err != nil {
 		return nil, "", err
@@ -104,7 +103,7 @@ func (a *authLogic) Logout(ctx context.Context, uid uint64) error {
 }
 
 // Register .
-func (a *authLogic) Register(ctx context.Context, name, email, phone, password *string) (*meta2.User, string, error) {
+func (a *authLogic) Register(ctx context.Context, name, email, phone, password *string) (*meta.User, string, error) {
 	var userName, userEmail, userPhone, userpPassword string
 	if name != nil {
 		userName = *name
@@ -139,7 +138,7 @@ func (a *authLogic) Register(ctx context.Context, name, email, phone, password *
 	if password != nil {
 		userpPassword = *password
 	}
-	user := &meta2.User{
+	user := &meta.User{
 		Name:     userName,
 		Email:    userEmail,
 		Phone:    userPhone,

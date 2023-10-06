@@ -9,7 +9,7 @@ import (
 
 // NewMysqlOptions create a `zero` value instance.
 func NewMysqlOptions() *mysql.Options {
-	env := config.NewEnvConfig()
+	env := config.NewConfig()
 	return &mysql.Options{
 		Host:                  env.DBHost,
 		Port:                  env.DBPort,

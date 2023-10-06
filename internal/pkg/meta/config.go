@@ -1,11 +1,7 @@
-package config
+package meta
 
-import (
-	"github.com/spf13/viper"
-)
-
-// EnvConfig 环境变量映射结构体
-type EnvConfig struct {
+// Config 环境变量映射结构体
+type Config struct {
 	AppEnv string `mapstructure:"APP_ENV" default:"development"`
 
 	ServerHost string `mapstructure:"SERVER_HOST" default:"127.0.0.1"`
@@ -30,22 +26,4 @@ type EnvConfig struct {
 	AliyunSmsTemplateCode string `mapstructure:"ALIYUN_SMS_TEMPLATE_CODE"`
 
 	JWTSecret string `mapstructure:"JWT_SECRET"`
-}
-
-// Env 系统配置
-var env *EnvConfig
-
-func NewEnvConfig() *EnvConfig {
-	if env == nil {
-		viper.AddConfigPath(".")
-		viper.SetConfigName(".env")
-		viper.SetConfigType("env")
-		if err := viper.ReadInConfig(); err != nil {
-			panic(err)
-		}
-		if err := viper.Unmarshal(&env); err != nil {
-			panic(err)
-		}
-	}
-	return env
 }
