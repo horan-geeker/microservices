@@ -3,10 +3,10 @@ package logic
 import (
 	"context"
 	"errors"
-	"github.com/golang-jwt/jwt"
 	"gorm.io/gorm"
 	"microservices/internal/pkg/consts"
 	"microservices/internal/pkg/ecode"
+	"microservices/internal/pkg/jwt"
 	"microservices/internal/pkg/meta"
 	"microservices/internal/pkg/options"
 	"microservices/internal/store"
@@ -24,7 +24,6 @@ type AuthLogicInterface interface {
 	VerifyPassword(password string, inputPasswd string) bool
 	VerifySmsCode(ctx context.Context, phone string, smsCode string) error
 	GeneratePasswordHash(password string) string
-	GenerateJWTToken(id uint64) (string, error)
 	GetAuthUser(ctx context.Context) (*meta.AuthClaims, error)
 }
 
@@ -79,7 +78,7 @@ func (a *authLogic) Login(ctx context.Context, name, email, phone, password, sms
 			return nil, "", err
 		}
 	}
-	token, err := a.GenerateJWTToken(user.ID)
+	token, err := jwt.NewJwt(options.NewJwtOptions()).GenerateToken(user.ID)
 	if err != nil {
 		return nil, "", err
 	}
@@ -149,7 +148,7 @@ func (a *authLogic) Register(ctx context.Context, name, email, phone, password *
 	if err := a.store.Users().Create(ctx, user); err != nil {
 		return nil, "", err
 	}
-	token, err := a.GenerateJWTToken(user.ID)
+	token, err := jwt.NewJwt(options.NewJwtOptions()).GenerateToken(user.ID)
 	if err != nil {
 		return nil, "", err
 	}
@@ -234,18 +233,6 @@ func (a *authLogic) VerifyEmailCode(ctx context.Context, email string, code stri
 // GeneratePasswordHash .
 func (a *authLogic) GeneratePasswordHash(password string) string {
 	return util.MD5(password)
-}
-
-func (a *authLogic) GenerateJWTToken(id uint64) (string, error) {
-	c := meta.AuthClaims{
-		id,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(consts.UserTokenExpiredIn).Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
-	opts := options.NewJwtOptions()
-	return token.SignedString([]byte(opts.Key))
 }
 
 func (a *authLogic) GetAuthUser(ctx context.Context) (*meta.AuthClaims, error) {

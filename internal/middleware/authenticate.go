@@ -7,11 +7,10 @@ import (
 	redis2 "github.com/redis/go-redis/v9"
 	"io"
 	"microservices/internal/pkg/ecode"
-	"microservices/internal/pkg/meta"
+	"microservices/internal/pkg/jwt"
 	"microservices/internal/pkg/options"
 	"microservices/internal/store/redis"
 	"microservices/pkg/app"
-	"microservices/pkg/jwt"
 )
 
 func Authenticate() gin.HandlerFunc {
@@ -25,7 +24,7 @@ func Authenticate() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		authClaims, err := jwt.NewJwt[meta.AuthClaims](options.NewJwtOptions()).ParseJWTToken(authorization)
+		authClaims, err := jwt.NewJwt(options.NewJwtOptions()).DecodeToken(authorization)
 		// 解析出错按照未登录返回
 		if err != nil {
 			app.MakeErrorResponse(c, ecode.ErrTokenInvalid)

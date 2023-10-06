@@ -3,7 +3,7 @@ package options
 import (
 	"microservices/internal/config"
 	"microservices/internal/pkg/consts"
-	"microservices/pkg/jwt"
+	"microservices/internal/pkg/jwt"
 )
 
 // NewJwtOptions creates a Options object with default parameters.
