@@ -1,13 +1,14 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
 	log "github.com/sirupsen/logrus"
 )
 
 type Aliyun interface {
-	SendSMSCode(phone string, code string) error
+	SendSMSCode(ctx context.Context, phone string, code string) error
 }
 
 type aliyun struct {
@@ -18,7 +19,7 @@ type aliyun struct {
 }
 
 // SendSMSCode .
-func (a *aliyun) SendSMSCode(phone string, code string) error {
+func (a *aliyun) SendSMSCode(ctx context.Context, phone string, code string) error {
 	client, err := dysmsapi.NewClientWithAccessKey("cn-hangzhou", a.accessKeyId, a.accessKeySecret)
 
 	type templateJson struct {
@@ -43,11 +44,11 @@ func (a *aliyun) SendSMSCode(phone string, code string) error {
 	return nil
 }
 
-func newAliyun(accessKey, accessSecret, smsSignName, smsTemplateCode string) Aliyun {
+func newAliyun(srv *serviceInstance) Aliyun {
 	return &aliyun{
-		accessKeyId:     accessKey,
-		accessKeySecret: accessSecret,
-		SmsSignName:     smsSignName,
-		SmsTemplateCode: smsTemplateCode,
+		accessKeyId:     srv.aliyunOptions.AccessKeyId,
+		accessKeySecret: srv.aliyunOptions.AccessKeySecret,
+		SmsSignName:     srv.aliyunOptions.SmsSignName,
+		SmsTemplateCode: srv.aliyunOptions.SmsTemplateCode,
 	}
 }

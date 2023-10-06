@@ -1,4 +1,4 @@
-package meta
+package app
 
 import (
 	"errors"
@@ -14,39 +14,40 @@ import (
 	"strings"
 )
 
-var app *Engine
+var app *App
 
-// Engine 包了一层 gin 内核
-type Engine struct {
+// App 包了一层 gin 内核
+type App struct {
 	*gin.Engine
+	serverOptions *ServerOptions
 }
 
 // POST is a shortcut for router.Handle("POST", path, handlers).
-func (e *Engine) POST(relativePath string, handlers ...any) gin.IRoutes {
+func (e *App) POST(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodPost, relativePath, handlers...)
 }
 
 // GET is a shortcut for router.Handle("GET", path, handlers).
-func (e *Engine) GET(relativePath string, handlers ...any) gin.IRoutes {
+func (e *App) GET(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodGet, relativePath, handlers...)
 }
 
 // DELETE is a shortcut for router.Handle("DELETE", path, handlers).
-func (e *Engine) DELETE(relativePath string, handlers ...any) gin.IRoutes {
+func (e *App) DELETE(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodDelete, relativePath, handlers...)
 }
 
 // PATCH is a shortcut for router.Handle("PATCH", path, handlers).
-func (e *Engine) PATCH(relativePath string, handlers ...any) gin.IRoutes {
+func (e *App) PATCH(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodPatch, relativePath, handlers...)
 }
 
 // PUT is a shortcut for router.Handle("PUT", path, handlers).
-func (e *Engine) PUT(relativePath string, handlers ...any) gin.IRoutes {
+func (e *App) PUT(relativePath string, handlers ...any) gin.IRoutes {
 	return e.Handle(http.MethodPut, relativePath, handlers...)
 }
 
-func (e *Engine) Handle(httpMethod, relativePath string, customHandlers ...any) gin.IRoutes {
+func (e *App) Handle(httpMethod, relativePath string, customHandlers ...any) gin.IRoutes {
 	handlers := make([]gin.HandlerFunc, 0)
 	for _, handler := range customHandlers {
 		var ginHandlerFunc gin.HandlerFunc
@@ -64,7 +65,7 @@ func (e *Engine) Handle(httpMethod, relativePath string, customHandlers ...any) 
 	return e.Engine.Handle(httpMethod, relativePath, handlers...)
 }
 
-func (e *Engine) wrapperGin(handle any) gin.HandlerFunc {
+func (e *App) wrapperGin(handle any) gin.HandlerFunc {
 	t := reflect.TypeOf(handle)
 	f := reflect.ValueOf(handle)
 	argsNum := t.NumIn()
@@ -118,7 +119,7 @@ func (e *Engine) wrapperGin(handle any) gin.HandlerFunc {
 	}
 }
 
-func (e *Engine) validateController(controller any) error {
+func (e *App) validateController(controller any) error {
 	t := reflect.TypeOf(controller)
 	if t.Kind() != reflect.Func {
 		return nil
@@ -153,7 +154,7 @@ func (e *Engine) validateController(controller any) error {
 	return nil
 }
 
-func (e *Engine) parseUrlParams(c *gin.Context) []any {
+func (e *App) parseUrlParams(c *gin.Context) []any {
 	params := make([]any, 0)
 	for _, param := range c.Params {
 		params = append(params, param.Value)
@@ -161,7 +162,7 @@ func (e *Engine) parseUrlParams(c *gin.Context) []any {
 	return params
 }
 
-func (e *Engine) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
+func (e *App) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
 	if err := c.ShouldBindJSON(&reqStruct); err != nil {
 		traceId, _ := c.Request.Context().Value("traceId").(string)
 		spanId, _ := c.Request.Context().Value("spanId").(string)
@@ -217,11 +218,12 @@ func MakeErrorResponse(c *gin.Context, err error) {
 	})
 }
 
-// GetEnginInstance .
-func GetEnginInstance(middleware ...gin.HandlerFunc) *Engine {
+// NewApp .
+func NewApp(options *ServerOptions, middleware ...gin.HandlerFunc) *App {
 	if app == nil {
-		app = &Engine{
-			Engine: gin.Default(),
+		app = &App{
+			Engine:        gin.Default(),
+			serverOptions: options,
 		}
 		app.Use(middleware...)
 		return app

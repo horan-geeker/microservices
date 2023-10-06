@@ -2,5 +2,5 @@ package consts
 
 const (
 	RedisUserTokenKey = "UID:%d:TOKEN"
-	RedisUserSmsKey   = "UID:%d:SMS_CODE"
+	RedisUserSmsKey   = "PHONE:%s:SMS_CODE"
 )

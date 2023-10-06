@@ -10,7 +10,7 @@ type AuthController struct {
 	logic logic.LogicInterface
 }
 
-func NewAuthController(store store.DataFactory, cache store.CacheFactory, srv service.ServiceFactory) *AuthController {
+func NewAuthController(store store.Factory, cache store.CacheFactory, srv service.Factory) *AuthController {
 	return &AuthController{
 		logic: logic.NewLogic(store, cache, srv),
 	}

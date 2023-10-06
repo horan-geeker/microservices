@@ -1,8 +1,10 @@
 package service
 
-import "microservices/internal/pkg/options"
+import (
+	"microservices/internal/pkg/options"
+)
 
-type ServiceFactory interface {
+type Factory interface {
 	Tencent() Tencent
 	Aliyun() Aliyun
 }
@@ -13,14 +15,14 @@ type serviceInstance struct {
 }
 
 func (s *serviceInstance) Tencent() Tencent {
-	return newTencent("", "")
+	return newTencent(s)
 }
 
 func (s *serviceInstance) Aliyun() Aliyun {
-	return newAliyun("", "", "", "")
+	return newAliyun(s)
 }
 
-func GetServiceInstance(tencentOpt *options.TencentOptions, aliyunOpt *options.AliyunOptions) ServiceFactory {
+func GetServiceInstance(tencentOpt *options.TencentOptions, aliyunOpt *options.AliyunOptions) Factory {
 	return &serviceInstance{
 		tencentOptions: tencentOpt,
 		aliyunOptions:  aliyunOpt,

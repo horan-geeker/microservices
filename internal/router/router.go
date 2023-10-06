@@ -8,12 +8,12 @@ import (
 	"microservices/internal/service"
 	"microservices/internal/store/mysql"
 	"microservices/internal/store/redis"
-	"microservices/pkg/meta"
+	"microservices/pkg/app"
 )
 
-var dataFactory = mysql.GetMysqlInstance(options.NewMySQLOptions())
+var dataFactory = mysql.GetMysqlInstance(options.NewMysqlOptions())
 var cacheFactory = redis.GetRedisInstance(options.NewRedisOptions())
 var serviceFactory = service.GetServiceInstance(options.NewTencentOptions(), options.NewAliyunOptions())
 
 // 注入全局中间件，注意压缩 response 的中间件顺序需要在 log response 之后压缩
-var router = meta.GetEnginInstance(gzip.Gzip(gzip.DefaultCompression), middleware.RequestLogger, gin.Recovery())
+var router = app.NewApp(app.NewServerOptions(3), gzip.Gzip(gzip.DefaultCompression), middleware.RequestLogger, gin.Recovery())

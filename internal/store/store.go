@@ -1,7 +1,7 @@
 package store
 
-// DataFactory .
-type DataFactory interface {
+// Factory .
+type Factory interface {
 	Users() UserStore
 }
 

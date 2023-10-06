@@ -10,7 +10,7 @@ type SystemController struct {
 	logic logic.LogicInterface
 }
 
-func NewSystemController(store store.DataFactory, cache store.CacheFactory, srv service.ServiceFactory) *SystemController {
+func NewSystemController(store store.Factory, cache store.CacheFactory, srv service.Factory) *SystemController {
 	return &SystemController{
 		logic: logic.NewLogic(store, cache, srv),
 	}

@@ -7,9 +7,10 @@ import (
 	redis2 "github.com/redis/go-redis/v9"
 	"io"
 	"microservices/internal/pkg/ecode"
+	"microservices/internal/pkg/jwt"
 	"microservices/internal/pkg/options"
 	"microservices/internal/store/redis"
-	"microservices/pkg/meta"
+	"microservices/pkg/app"
 )
 
 func Authenticate() gin.HandlerFunc {
@@ -19,31 +20,31 @@ func Authenticate() gin.HandlerFunc {
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
 		authorization := c.Request.Header.Get("Authorization")
 		if len(authorization) == 0 {
-			meta.MakeErrorResponse(c, ecode.ErrTokenIsEmpty)
+			app.MakeErrorResponse(c, ecode.ErrTokenIsEmpty)
 			c.Abort()
 			return
 		}
-		authClaims, err := meta.ParseJWTToken(authorization)
+		authClaims, err := jwt.NewJwt(options.NewJwtOptions()).DecodeToken(authorization)
 		// 解析出错按照未登录返回
 		if err != nil {
-			meta.MakeErrorResponse(c, ecode.ErrTokenInvalid)
+			app.MakeErrorResponse(c, ecode.ErrTokenInvalid)
 			c.Abort()
 			return
 		}
 		// 判断是否被注销
 		token, err := cache.Users().GetToken(c.Request.Context(), authClaims.Uid)
 		if err == redis2.Nil {
-			meta.MakeErrorResponse(c, ecode.ErrTokenDiscard)
+			app.MakeErrorResponse(c, ecode.ErrTokenDiscard)
 			c.Abort()
 			return
 		}
 		if err != nil {
-			meta.MakeErrorResponse(c, err)
+			app.MakeErrorResponse(c, err)
 			c.Abort()
 			return
 		}
 		if token != authorization {
-			meta.MakeErrorResponse(c, ecode.ErrTokenDiscard)
+			app.MakeErrorResponse(c, ecode.ErrTokenDiscard)
 			c.Abort()
 			return
 		}

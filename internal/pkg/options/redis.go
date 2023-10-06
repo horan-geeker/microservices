@@ -1,17 +1,13 @@
 package options
 
-import "microservices/internal/config"
+import (
+	"microservices/internal/config"
+	"microservices/pkg/redis"
+)
 
-type RedisOptions struct {
-	Host     string
-	Password string
-	Port     int
-	DB       int
-}
-
-func NewRedisOptions() *RedisOptions {
-	env := config.NewEnvConfig()
-	return &RedisOptions{
+func NewRedisOptions() *redis.Options {
+	env := config.NewConfig()
+	return &redis.Options{
 		Host:     env.RedisHost,
 		Password: env.RedisPassword,
 		Port:     env.RedisPort,
