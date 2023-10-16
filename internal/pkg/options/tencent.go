@@ -10,7 +10,7 @@ type TencentOptions struct {
 }
 
 func NewTencentOptions() *TencentOptions {
-	env := config.NewConfig()
+	env := config.GetConfig()
 	return &TencentOptions{
 		MailServerAddress:  env.TencentMailServerAddress,
 		MailServerPassword: env.TencentMailServerPassword,

@@ -12,7 +12,7 @@ type AliyunOptions struct {
 }
 
 func NewAliyunOptions() *AliyunOptions {
-	env := config.NewConfig()
+	env := config.GetConfig()
 	return &AliyunOptions{
 		AccessKeyId:     env.AliyunAccessKeyId,
 		AccessKeySecret: env.AliyunAccessKeySecret,

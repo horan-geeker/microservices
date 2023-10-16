@@ -8,7 +8,7 @@ import (
 
 // NewJwtOptions creates a Options object with default parameters.
 func NewJwtOptions() *jwt.Options {
-	env := config.NewConfig()
+	env := config.GetConfig()
 	return &jwt.Options{
 		Realm:      consts.AppName,
 		Key:        env.JWTSecret,

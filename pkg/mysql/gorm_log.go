@@ -1,16 +1,16 @@
-package log
+package mysql
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
+	"errors"
+	"fmt"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
-	"os"
+	"microservices/pkg/log"
 	"time"
 )
 
 type gormLogger struct {
-	Logger *logrus.Logger
 	logger.Config
 }
 
@@ -23,21 +23,23 @@ func (l *gormLogger) LogMode(level logger.LogLevel) logger.Interface {
 // Info print info
 func (l gormLogger) Info(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel >= logger.Info {
-		l.Logger.Printf("fffff", data)
+		log.Info(ctx, "mysql-info", map[string]any{
+			"msg": fmt.Sprintf(msg, data...),
+		})
 	}
 }
 
 // Warn print warn messages
 func (l gormLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel >= logger.Warn {
-		l.Logger.Printf(msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
+		log.Warning(ctx, "mysql-warn", fmt.Sprintf(msg, append([]interface{}{utils.FileWithLineNum()}, data...)), nil)
 	}
 }
 
 // Error print error messages
 func (l gormLogger) Error(ctx context.Context, msg string, data ...interface{}) {
 	if l.LogLevel >= logger.Error {
-		l.Logger.Printf(msg, append([]interface{}{utils.FileWithLineNum()}, data...)...)
+		log.Error(ctx, "mysql-error", errors.New(fmt.Sprintf(msg, append([]interface{}{utils.FileWithLineNum()}, data...))), nil)
 	}
 }
 
@@ -46,26 +48,17 @@ func (l gormLogger) Trace(ctx context.Context, begin time.Time, fc func() (strin
 	if l.LogLevel <= logger.Silent {
 		return
 	}
-	traceId, _ := ctx.Value("traceId").(string)
-	spanId, _ := ctx.Value("spanId").(string)
 	elapsed := time.Since(begin)
-	sql, rows := fc()
-	l.Logger.WithFields(logrus.Fields{
-		"traceId":  traceId,
-		"spanId":   spanId,
-		"sql":      sql,
-		"rows":     rows,
-		"timeCost": elapsed.Milliseconds(),
-		"event":    "mysql",
-	}).Info()
+	sql, rowsAffected := fc()
+	log.Info(ctx, "mysql", map[string]any{
+		"sql":          sql,
+		"rowsAffected": rowsAffected,
+		"timeCost":     elapsed.Milliseconds(),
+	})
 }
 
 func NewGormCustomLogger(logLevel logger.LogLevel) logger.Interface {
-	log := logrus.New()
-	log.SetOutput(os.Stdout)
-	log.SetFormatter(&logrus.JSONFormatter{})
 	return &gormLogger{
-		log,
 		logger.Config{
 			LogLevel:                  logLevel, // Log level
 			IgnoreRecordNotFoundError: true,     // Ignore ErrRecordNotFound error for logger

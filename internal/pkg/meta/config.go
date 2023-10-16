@@ -4,9 +4,11 @@ package meta
 type Config struct {
 	AppEnv string `mapstructure:"APP_ENV" default:"development"`
 
-	ServerHost string `mapstructure:"SERVER_HOST" default:"127.0.0.1"`
-	ServerPort int    `mapstructure:"SERVER_PORT" default:"80"`
+	ServerHost    string `mapstructure:"SERVER_HOST" default:"127.0.0.1"`
+	ServerPort    int    `mapstructure:"SERVER_PORT" default:"80"`
+	ServerTimeout int    `mapstructure:"SERVER_TIMEOUT" default:"10"`
 
+	DBName     string `mapstructure:"DB_NAME"`
 	DBHost     string `mapstructure:"DB_HOST"`
 	DBPort     int    `mapstructure:"DB_PORT"`
 	DBUsername string `mapstructure:"DB_USERNAME"`

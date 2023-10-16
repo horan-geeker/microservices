@@ -52,7 +52,7 @@ func RequestLogger(c *gin.Context) {
 		"traceId": traceId,
 		"spanId":  spanId,
 		"body":    string(buf),
-		"event":   "api",
+		"event":   "request",
 		"header":  c.Request.Header,
 	}).Info()
 

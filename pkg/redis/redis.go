@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/redis/go-redis/v9"
-	"microservices/pkg/log"
 )
 
 func NewRedis(opts *Options) (*redis.Client, error) {
@@ -13,7 +12,7 @@ func NewRedis(opts *Options) (*redis.Client, error) {
 		Password: opts.Password,
 		DB:       opts.DB,
 	})
-	conn.AddHook(log.NewRedisLogHook())
+	conn.AddHook(NewRedisLogHook())
 	_, err := conn.Ping(context.Background()).Result()
 	if err != nil {
 		return nil, err

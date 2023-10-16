@@ -1,4 +1,4 @@
-package log
+package redis
 
 import (
 	"context"
@@ -44,7 +44,7 @@ func (r *RedisLogHook) ProcessHook(next redis.ProcessHook) redis.ProcessHook {
 			"cmd":      cmd.String(),
 			"timeCost": time.Since(begin).Milliseconds(),
 		}
-		if err != nil {
+		if err != nil && err != redis.Nil {
 			logFields["error"] = err.Error()
 			logrus.WithFields(logFields).Error()
 		} else {

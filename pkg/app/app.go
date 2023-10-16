@@ -1,14 +1,19 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"io"
 	"microservices/internal/entity"
 	errors2 "microservices/pkg/ecode"
+	"microservices/pkg/log"
 	"microservices/pkg/util"
 	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -18,6 +23,7 @@ var app *App
 
 // App 包了一层 gin 内核
 type App struct {
+	command *command
 	*gin.Engine
 	serverOptions *ServerOptions
 }
@@ -221,12 +227,40 @@ func MakeErrorResponse(c *gin.Context, err error) {
 // NewApp .
 func NewApp(options *ServerOptions, middleware ...gin.HandlerFunc) *App {
 	if app == nil {
+		logrus.SetFormatter(&logrus.JSONFormatter{
+			TimestampFormat: "2006-01-02 15:04:05.000000",
+		})
+		logrus.SetOutput(os.Stdout)
+		// disable gin log
+		if options.Env == "production" {
+			gin.SetMode(gin.ReleaseMode)
+		} else {
+			gin.SetMode(gin.DebugMode)
+		}
+		gin.DefaultWriter = io.Discard
 		app = &App{
 			Engine:        gin.Default(),
+			command:       c,
 			serverOptions: options,
 		}
 		app.Use(middleware...)
 		return app
 	}
 	return app
+}
+
+func (a *App) Running(ctx context.Context) error {
+	log.Info(ctx, "run", map[string]any{
+		"host": a.serverOptions.Host,
+		"port": a.serverOptions.Port,
+	})
+	go func() {
+		if err := a.command.Run(ctx); err != nil {
+			log.Error(ctx, "command-error", err, nil)
+		}
+	}()
+	if err := a.Run(fmt.Sprintf("%s:%d", a.serverOptions.Host, a.serverOptions.Port)); err != nil {
+		panic(err)
+	}
+	return nil
 }

@@ -7,7 +7,7 @@ import (
 
 var conf *meta.Config
 
-func NewConfig() *meta.Config {
+func GetConfig() *meta.Config {
 	if conf == nil {
 		conf = &meta.Config{}
 		if err := config.NewConfig(conf); err != nil {
