@@ -29,49 +29,49 @@ type App struct {
 }
 
 // POST is a shortcut for router.Handle("POST", path, handlers).
-func (e *App) POST(relativePath string, handlers ...any) gin.IRoutes {
-	return e.Handle(http.MethodPost, relativePath, handlers...)
+func (a *App) POST(relativePath string, handlers ...any) gin.IRoutes {
+	return a.Handle(http.MethodPost, relativePath, handlers...)
 }
 
 // GET is a shortcut for router.Handle("GET", path, handlers).
-func (e *App) GET(relativePath string, handlers ...any) gin.IRoutes {
-	return e.Handle(http.MethodGet, relativePath, handlers...)
+func (a *App) GET(relativePath string, handlers ...any) gin.IRoutes {
+	return a.Handle(http.MethodGet, relativePath, handlers...)
 }
 
 // DELETE is a shortcut for router.Handle("DELETE", path, handlers).
-func (e *App) DELETE(relativePath string, handlers ...any) gin.IRoutes {
-	return e.Handle(http.MethodDelete, relativePath, handlers...)
+func (a *App) DELETE(relativePath string, handlers ...any) gin.IRoutes {
+	return a.Handle(http.MethodDelete, relativePath, handlers...)
 }
 
 // PATCH is a shortcut for router.Handle("PATCH", path, handlers).
-func (e *App) PATCH(relativePath string, handlers ...any) gin.IRoutes {
-	return e.Handle(http.MethodPatch, relativePath, handlers...)
+func (a *App) PATCH(relativePath string, handlers ...any) gin.IRoutes {
+	return a.Handle(http.MethodPatch, relativePath, handlers...)
 }
 
 // PUT is a shortcut for router.Handle("PUT", path, handlers).
-func (e *App) PUT(relativePath string, handlers ...any) gin.IRoutes {
-	return e.Handle(http.MethodPut, relativePath, handlers...)
+func (a *App) PUT(relativePath string, handlers ...any) gin.IRoutes {
+	return a.Handle(http.MethodPut, relativePath, handlers...)
 }
 
-func (e *App) Handle(httpMethod, relativePath string, customHandlers ...any) gin.IRoutes {
+func (a *App) Handle(httpMethod, relativePath string, customHandlers ...any) gin.IRoutes {
 	handlers := make([]gin.HandlerFunc, 0)
 	for _, handler := range customHandlers {
 		var ginHandlerFunc gin.HandlerFunc
 		name := util.GetFunctionName(handler)
 		if strings.Contains(name, "internal/controller") {
-			if err := e.validateController(handler); err != nil {
+			if err := a.validateController(handler); err != nil {
 				panic(err)
 			}
-			ginHandlerFunc = e.wrapperGin(handler)
+			ginHandlerFunc = a.wrapperGin(handler)
 		} else {
 			ginHandlerFunc = handler.(gin.HandlerFunc)
 		}
 		handlers = append(handlers, ginHandlerFunc)
 	}
-	return e.Engine.Handle(httpMethod, relativePath, handlers...)
+	return a.Engine.Handle(httpMethod, relativePath, handlers...)
 }
 
-func (e *App) wrapperGin(handle any) gin.HandlerFunc {
+func (a *App) wrapperGin(handle any) gin.HandlerFunc {
 	t := reflect.TypeOf(handle)
 	f := reflect.ValueOf(handle)
 	argsNum := t.NumIn()
@@ -89,7 +89,7 @@ func (e *App) wrapperGin(handle any) gin.HandlerFunc {
 		// 在框架初始化的时候通过反射获取类型同时注册路由，这样就不需要在controller里每次获取参数映射，而变成了函数参数
 		var values []reflect.Value
 		values = append(values, reflect.ValueOf(c))
-		urlParams := e.parseUrlParams(c)
+		urlParams := a.parseUrlParams(c)
 		if len(urlParams) > 0 {
 			for index, urlParam := range urlParams {
 				arg := urlParam
@@ -107,7 +107,7 @@ func (e *App) wrapperGin(handle any) gin.HandlerFunc {
 			}
 		}
 		if bodyStruct != nil {
-			param, err := e.parseBodyToJsonStruct(c, bodyStruct)
+			param, err := a.parseBodyToJsonStruct(c, bodyStruct)
 			if err != nil {
 				return
 			}
@@ -125,7 +125,7 @@ func (e *App) wrapperGin(handle any) gin.HandlerFunc {
 	}
 }
 
-func (e *App) validateController(controller any) error {
+func (a *App) validateController(controller any) error {
 	t := reflect.TypeOf(controller)
 	if t.Kind() != reflect.Func {
 		return nil
@@ -160,7 +160,7 @@ func (e *App) validateController(controller any) error {
 	return nil
 }
 
-func (e *App) parseUrlParams(c *gin.Context) []any {
+func (a *App) parseUrlParams(c *gin.Context) []any {
 	params := make([]any, 0)
 	for _, param := range c.Params {
 		params = append(params, param.Value)
@@ -168,7 +168,7 @@ func (e *App) parseUrlParams(c *gin.Context) []any {
 	return params
 }
 
-func (e *App) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
+func (a *App) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
 	if err := c.ShouldBindJSON(&reqStruct); err != nil {
 		traceId, _ := c.Request.Context().Value("traceId").(string)
 		spanId, _ := c.Request.Context().Value("spanId").(string)
