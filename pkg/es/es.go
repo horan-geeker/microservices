@@ -16,6 +16,7 @@ type ElasticSearchClient[T any] struct {
 	client *elasticsearch.Client
 }
 
+// Search 搜索 api
 func (e *ElasticSearchClient[T]) Search(ctx context.Context, index string, query map[string]any) (any, error) {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
@@ -41,39 +42,62 @@ func (e *ElasticSearchClient[T]) Search(ctx context.Context, index string, query
 	return r, nil
 }
 
+// Create 新增 doc 当 docId 有值时并且 es 中存在 docId 则进行更新 upsert
 func (e *ElasticSearchClient[T]) Create(ctx context.Context, index string, id *string, record T) error {
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(record); err != nil {
 		return err
 	}
+	req := esapi.IndexRequest{
+		Index:   index,
+		Body:    &buf,
+		Refresh: "true",
+	}
 	if id == nil {
-		req := esapi.IndexRequest{
-			Index:   index,
-			Body:    &buf,
-			Refresh: "true",
-		}
-		res, err := req.Do(ctx, e.client)
-		if err != nil {
-			return err
-		}
-		if res.IsError() {
-			return errors.New(res.String())
-		}
-	} else {
-		response, err := e.client.Create(
-			index,
-			id,
-			&buf,
-			e.client.Create.WithContext(ctx),
-		)
-		if err != nil {
-			return err
-		}
-		if response.IsError() {
-			return errors.New(response.String())
-		}
+		req.DocumentID = *id
+	}
+	res, err := req.Do(ctx, e.client)
+	if err != nil {
+		return err
+	}
+	if res.IsError() {
+		return errors.New(res.String())
 	}
 	return nil
+}
+
+// Delete .
+func (e *ElasticSearchClient[T]) Delete(ctx context.Context, index, docId string) error {
+	res, err := e.client.Delete(
+		index,
+		docId,
+		e.client.Delete.WithRefresh("true"),
+		e.client.Delete.WithContext(ctx),
+	)
+	if err != nil {
+		return err
+	}
+	if res.IsError() {
+		return errors.New(res.String())
+	}
+	return nil
+}
+
+// GetByDocId .
+func (e *ElasticSearchClient[T]) GetByDocId(ctx context.Context, index string, docId string) (t T, err error) {
+	res, err := e.client.Get(index, docId, e.client.Get.WithContext(ctx))
+	if err != nil {
+		return t, err
+	}
+	if res.IsError() {
+		return t, errors.New(res.String())
+	}
+	defer res.Body.Close()
+	var r T
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		return t, err
+	}
+	return r, nil
 }
 
 func NewElasticSearch[T any](opts *Options) (*ElasticSearchClient[T], error) {
