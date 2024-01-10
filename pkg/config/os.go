@@ -6,6 +6,20 @@ import (
 	"strings"
 )
 
+type EnvConfigInstance struct {
+}
+
+func (f *EnvConfigInstance) GetContent() (map[string]string, error) {
+	envMap := make(map[string]string)
+	for _, v := range os.Environ() {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			envMap[kv[0]] = kv[1]
+		}
+	}
+	return envMap, nil
+}
+
 func ParseConfigFromOSEnv[T any](conf *T) error {
 	envTpl := ""
 	envs := os.Environ()
