@@ -58,7 +58,7 @@ func (a *App) Handle(httpMethod, relativePath string, customHandlers ...any) gin
 	for _, handler := range customHandlers {
 		var ginHandlerFunc gin.HandlerFunc
 		name := util.GetFunctionName(handler)
-		if strings.Contains(name, "/service.") {
+		if strings.Contains(name, "/controller.") {
 			if err := a.validateController(handler); err != nil {
 				panic(err)
 			}
@@ -248,8 +248,12 @@ func NewApp(options *ServerOptions, middleware ...gin.HandlerFunc) *App {
 			serverOptions: options,
 		}
 		app.Use(middleware...)
-		return app
 	}
+	return app
+}
+
+// GetApp .
+func GetApp() *App {
 	return app
 }
 

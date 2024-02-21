@@ -45,6 +45,7 @@ func (s *factoryImpl) Aliyun() Aliyun {
 
 // 实例化
 var (
+	factory       Factory
 	db            *gorm.DB
 	rdb           *redis.Client
 	mysqlInitOnce sync.Once
@@ -53,12 +54,15 @@ var (
 
 // NewFactory .
 func NewFactory() Factory {
-	return &factoryImpl{
-		db:         GetMysqlInstance(options.NewMysqlOptions()),
-		rdb:        GetRedisInstance(options.NewRedisOptions()),
-		tencentOpt: options.NewTencentOptions(),
-		aliyunOpt:  options.NewAliyunOptions(),
+	if factory == nil {
+		factory = &factoryImpl{
+			db:         GetMysqlInstance(options.NewMysqlOptions()),
+			rdb:        GetRedisInstance(options.NewRedisOptions()),
+			tencentOpt: options.NewTencentOptions(),
+			aliyunOpt:  options.NewAliyunOptions(),
+		}
 	}
+	return factory
 }
 
 // GetMysqlInstance .

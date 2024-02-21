@@ -2,9 +2,12 @@ package router
 
 import (
 	"microservices/controller"
+	"microservices/pkg/app"
+	"microservices/repository"
 )
 
 func init() {
-	controller := controller.NewNotifyController(repositoryFactory)
-	router.POST("/notify/sms", controller.SendSms)
+	notifyController := controller.NewNotifyController(repository.NewFactory())
+	router := app.GetApp()
+	router.POST("/notify/sms", notifyController.SendSms)
 }
