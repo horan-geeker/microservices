@@ -15,12 +15,12 @@ type AuthApi interface {
 	Logout(c *gin.Context) (map[string]any, error)
 }
 
-type authServiceImpl struct {
+type authControllerImpl struct {
 	logic logic.LogicInterface
 }
 
 // ChangePassword .
-func (a *authServiceImpl) ChangePassword(c *gin.Context, param *api.ChangePasswordParams) (map[string]any, error) {
+func (a *authControllerImpl) ChangePassword(c *gin.Context, param *api.ChangePasswordParams) (map[string]any, error) {
 	auth, err := a.logic.Auth().GetAuthUser(c.Request.Context())
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (a *authServiceImpl) ChangePassword(c *gin.Context, param *api.ChangePasswo
 	return nil, nil
 }
 
-func (a *authServiceImpl) ChangePasswordByPhone(c *gin.Context, param *api.ChangePasswordByPhoneParams) (map[string]any, error) {
+func (a *authControllerImpl) ChangePasswordByPhone(c *gin.Context, param *api.ChangePasswordByPhoneParams) (map[string]any, error) {
 	if err := a.logic.Auth().ChangePasswordByPhone(c.Request.Context(), param.NewPassword, param.Phone, param.SmsCode); err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (a *authServiceImpl) ChangePasswordByPhone(c *gin.Context, param *api.Chang
 }
 
 // Login .
-func (a *authServiceImpl) Login(c *gin.Context, params *api.LoginParams) (map[string]any, error) {
+func (a *authControllerImpl) Login(c *gin.Context, params *api.LoginParams) (map[string]any, error) {
 	user, token, err := a.logic.Auth().Login(c.Request.Context(), params.Name, params.Email, params.Phone, params.Password,
 		params.SmsCode, params.EmailCode)
 	if err != nil {
@@ -59,7 +59,7 @@ func (a *authServiceImpl) Login(c *gin.Context, params *api.LoginParams) (map[st
 }
 
 // Logout .
-func (a *authServiceImpl) Logout(c *gin.Context) (map[string]any, error) {
+func (a *authControllerImpl) Logout(c *gin.Context) (map[string]any, error) {
 	auth, err := a.logic.Auth().GetAuthUser(c.Request.Context())
 	if err != nil {
 		return nil, err
@@ -70,8 +70,8 @@ func (a *authServiceImpl) Logout(c *gin.Context) (map[string]any, error) {
 	return nil, nil
 }
 
-func NewAuthService(repositoryFactory repository.Factory) AuthApi {
-	return &authServiceImpl{
+func NewAuthController(repositoryFactory repository.Factory) AuthApi {
+	return &authControllerImpl{
 		logic: logic.NewLogic(repositoryFactory),
 	}
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	authService := controller.NewAuthService(repositoryFactory)
+	authService := controller.NewAuthController(repositoryFactory)
 	router.POST("/auth/login", authService.Login)
 	router.POST("/auth/logout", middleware.Authenticate(), authService.Logout)
 	router.POST("/auth/change-password", middleware.Authenticate(), authService.ChangePassword)
