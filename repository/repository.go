@@ -13,6 +13,7 @@ import (
 type Factory interface {
 	Users() User
 	Auth() Auth
+	Tencent() Tencent
 	Aliyun() Aliyun
 }
 
