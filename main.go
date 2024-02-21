@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	_ "microservices/internal/command"
-	"microservices/internal/config"
-	_ "microservices/internal/router"
+	_ "microservices/command"
+	"microservices/entity/config"
 	"microservices/pkg/app"
+	_ "microservices/router"
 )
 
 // 初始化资源
