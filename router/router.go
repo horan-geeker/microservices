@@ -10,7 +10,7 @@ import (
 
 // 初始化资源
 var (
-	env         = config.GetConfig()
-	application = app.NewApp(app.NewServerOptions(env.AppEnv, env.ServerHost, env.ServerPort, env.ServerTimeout))
-	_           = application.Use(gzip.Gzip(gzip.DefaultCompression), middleware.RequestLogger, gin.Recovery())
+	env    = config.GetConfig()
+	router = app.NewApp(app.NewServerOptions(env.AppEnv, env.ServerHost, env.ServerPort, env.ServerTimeout))
+	_      = router.Use(gzip.Gzip(gzip.DefaultCompression), middleware.RequestLogger, gin.Recovery())
 )
