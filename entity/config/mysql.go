@@ -1,15 +1,14 @@
-package options
+package config
 
 import (
 	"gorm.io/gorm/logger"
-	"microservices/entity/config"
 	"microservices/pkg/mysql"
 	"time"
 )
 
 // NewMysqlOptions create a `zero` value instance.
 func NewMysqlOptions() *mysql.Options {
-	env := config.GetConfig()
+	env := GetConfig()
 	return &mysql.Options{
 		Host:                  env.DBHost,
 		Port:                  env.DBPort,

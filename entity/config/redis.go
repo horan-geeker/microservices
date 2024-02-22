@@ -1,12 +1,11 @@
-package options
+package config
 
 import (
-	"microservices/entity/config"
 	"microservices/pkg/redis"
 )
 
 func NewRedisOptions() *redis.Options {
-	env := config.GetConfig()
+	env := GetConfig()
 	return &redis.Options{
 		Host:     env.RedisHost,
 		Password: env.RedisPassword,

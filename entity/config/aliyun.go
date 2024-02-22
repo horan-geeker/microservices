@@ -1,8 +1,4 @@
-package options
-
-import (
-	"microservices/entity/config"
-)
+package config
 
 type AliyunOptions struct {
 	AccessKeyId     string
@@ -12,7 +8,7 @@ type AliyunOptions struct {
 }
 
 func NewAliyunOptions() *AliyunOptions {
-	env := config.GetConfig()
+	env := GetConfig()
 	return &AliyunOptions{
 		AccessKeyId:     env.AliyunAccessKeyId,
 		AccessKeySecret: env.AliyunAccessKeySecret,

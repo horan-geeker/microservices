@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"microservices/logic"
 	"microservices/repository"
+	"microservices/service"
 )
 
 type SystemApi interface {
@@ -21,8 +22,8 @@ func (s *SystemController) Health(c *gin.Context) (map[string]any, error) {
 	}, nil
 }
 
-func NewSystemController(repositoryFactory repository.Factory) SystemApi {
+func NewSystemController(repositoryFactory repository.Factory, serviceFactory service.Factory) SystemApi {
 	return &SystemController{
-		logic: logic.NewLogic(repositoryFactory),
+		logic: logic.NewLogic(repositoryFactory, serviceFactory),
 	}
 }

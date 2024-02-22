@@ -5,6 +5,7 @@ import (
 	"microservices/logic/notify"
 	"microservices/logic/user"
 	"microservices/repository"
+	"microservices/service"
 )
 
 // LogicInterface defines functions used to return resource interface.
@@ -16,21 +17,22 @@ type LogicInterface interface {
 
 type logic struct {
 	repository repository.Factory
+	service    service.Factory
 }
 
 func (l *logic) Notify() notify.NotifyLogicInterface {
-	return notify.NewNotify(l.repository)
+	return notify.NewNotify(l.repository, l.service)
 }
 
 func (l *logic) Users() user.UserLogicInterface {
-	return user.NewUsers(l.repository)
+	return user.NewUsers(l.repository, l.service)
 }
 
 func (l *logic) Auth() auth.AuthLogicInterface {
-	return auth.NewAuth(l.repository)
+	return auth.NewAuth(l.repository, l.service)
 }
 
 // NewLogic .
-func NewLogic(factory repository.Factory) LogicInterface {
-	return &logic{factory}
+func NewLogic(repo repository.Factory, service service.Factory) LogicInterface {
+	return &logic{repo, service}
 }

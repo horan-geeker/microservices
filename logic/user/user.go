@@ -2,46 +2,48 @@ package user
 
 import (
 	"context"
-	"microservices/entity/meta"
+	"microservices/entity/model"
 	"microservices/repository"
+	"microservices/service"
 )
 
 // UserLogicInterface defines functions used to handle user api.
 type UserLogicInterface interface {
-	Create(ctx context.Context, user *meta.User) error
-	GetByUid(ctx context.Context, uid uint64) (*meta.User, error)
-	List(ctx context.Context) ([]meta.User, error)
+	Create(ctx context.Context, user *model.User) error
+	GetByUid(ctx context.Context, uid uint64) (*model.User, error)
+	List(ctx context.Context) ([]model.User, error)
 	Edit(ctx context.Context, id uint64, name, email, phone *string) error
 }
 
 type userLogic struct {
-	store repository.Factory
+	repo repository.Factory
+	srv  service.Factory
 }
 
-func NewUsers(store repository.Factory) *userLogic {
-	return &userLogic{store: store}
+func NewUsers(repo repository.Factory, service service.Factory) *userLogic {
+	return &userLogic{repo: repo, srv: service}
 }
 
 // Create .
-func (u *userLogic) Create(ctx context.Context, user *meta.User) error {
-	//return u.store.Users().Create(ctx, user)
+func (u *userLogic) Create(ctx context.Context, user *model.User) error {
+	//return u.repo.Users().Create(ctx, user)
 	return nil
 }
 
 // GetByUid .
-func (u *userLogic) GetByUid(ctx context.Context, uid uint64) (*meta.User, error) {
-	return u.store.Users().GetByUid(ctx, uid)
+func (u *userLogic) GetByUid(ctx context.Context, uid uint64) (*model.User, error) {
+	return u.repo.Users().GetByUid(ctx, uid)
 }
 
 // List .
-func (u *userLogic) List(ctx context.Context) ([]meta.User, error) {
-	//return u.store.Users().List(ctx)
+func (u *userLogic) List(ctx context.Context) ([]model.User, error) {
+	//return u.repo.Users().List(ctx)
 	return nil, nil
 }
 
 // Edit .
 func (u *userLogic) Edit(ctx context.Context, id uint64, name, email, phone *string) error {
-	user, err := u.store.Users().GetByUid(ctx, id)
+	user, err := u.repo.Users().GetByUid(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -55,5 +57,5 @@ func (u *userLogic) Edit(ctx context.Context, id uint64, name, email, phone *str
 	if phone != nil {
 		data["phone"] = *phone
 	}
-	return u.store.Users().Update(ctx, user.ID, data)
+	return u.repo.Users().Update(ctx, user.ID, data)
 }

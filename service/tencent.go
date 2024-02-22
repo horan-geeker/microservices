@@ -1,8 +1,8 @@
-package repository
+package service
 
 import (
 	"gopkg.in/gomail.v2"
-	"microservices/entity/options"
+	"microservices/entity/config"
 	"microservices/pkg/consts"
 	"net/mail"
 )
@@ -34,7 +34,7 @@ func (t *tencent) SendMailTo(mailTo string, from string, title string, content s
 	return nil
 }
 
-func newTencent(tencentOpt *options.TencentOptions) Tencent {
+func newTencent(tencentOpt *config.TencentOptions) Tencent {
 	return &tencent{
 		mailServerAddress:  tencentOpt.MailServerAddress,
 		mailServerPassword: tencentOpt.MailServerPassword,

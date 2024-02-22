@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	redis2 "github.com/redis/go-redis/v9"
 	"io"
+	options2 "microservices/entity/config"
 	"microservices/entity/ecode"
 	"microservices/entity/jwt"
-	options2 "microservices/entity/options"
 	"microservices/pkg/app"
 	"microservices/repository"
 )

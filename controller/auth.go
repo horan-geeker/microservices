@@ -5,6 +5,7 @@ import (
 	"microservices/api"
 	"microservices/logic"
 	"microservices/repository"
+	"microservices/service"
 	"time"
 )
 
@@ -70,8 +71,8 @@ func (a *authControllerImpl) Logout(c *gin.Context) (map[string]any, error) {
 	return nil, nil
 }
 
-func NewAuthController(repositoryFactory repository.Factory) AuthApi {
+func NewAuthController(repositoryFactory repository.Factory, serviceFactory service.Factory) AuthApi {
 	return &authControllerImpl{
-		logic: logic.NewLogic(repositoryFactory),
+		logic: logic.NewLogic(repositoryFactory, serviceFactory),
 	}
 }

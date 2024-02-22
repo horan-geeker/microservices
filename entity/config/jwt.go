@@ -1,14 +1,13 @@
-package options
+package config
 
 import (
-	"microservices/entity/config"
 	consts2 "microservices/entity/consts"
 	"microservices/entity/jwt"
 )
 
 // NewJwtOptions creates a Options object with default parameters.
 func NewJwtOptions() *jwt.Options {
-	env := config.GetConfig()
+	env := GetConfig()
 	return &jwt.Options{
 		Realm:      consts2.AppName,
 		Key:        env.JWTSecret,

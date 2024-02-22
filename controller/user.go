@@ -6,6 +6,7 @@ import (
 	"microservices/entity/ecode"
 	"microservices/logic"
 	"microservices/repository"
+	"microservices/service"
 )
 
 type UserApi interface {
@@ -60,8 +61,8 @@ func (u *UserController) Register(c *gin.Context, params *api.RegisterParams) (m
 }
 
 // NewUserController .
-func NewUserController(repository repository.Factory) UserApi {
+func NewUserController(repositoryFactory repository.Factory, serviceFactory service.Factory) UserApi {
 	return &UserController{
-		logic: logic.NewLogic(repository),
+		logic: logic.NewLogic(repositoryFactory, serviceFactory),
 	}
 }

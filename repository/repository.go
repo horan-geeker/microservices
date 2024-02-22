@@ -3,7 +3,7 @@ package repository
 import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	"microservices/entity/options"
+	"microservices/entity/config"
 	"microservices/pkg/mysql"
 	redis2 "microservices/pkg/redis"
 	"sync"
@@ -13,16 +13,12 @@ import (
 type Factory interface {
 	Users() User
 	Auth() Auth
-	Tencent() Tencent
-	Aliyun() Aliyun
 }
 
 // 定义 factoryImpl
 type factoryImpl struct {
-	db         *gorm.DB
-	rdb        *redis.Client
-	tencentOpt *options.TencentOptions
-	aliyunOpt  *options.AliyunOptions
+	db  *gorm.DB
+	rdb *redis.Client
 }
 
 // Users .
@@ -33,14 +29,6 @@ func (s *factoryImpl) Users() User {
 // Auth .
 func (s *factoryImpl) Auth() Auth {
 	return newAuth(s)
-}
-
-func (s *factoryImpl) Tencent() Tencent {
-	return newTencent(s.tencentOpt)
-}
-
-func (s *factoryImpl) Aliyun() Aliyun {
-	return newAliyun(s.aliyunOpt)
 }
 
 // 实例化
@@ -56,10 +44,8 @@ var (
 func NewFactory() Factory {
 	if factory == nil {
 		factory = &factoryImpl{
-			db:         GetMysqlInstance(options.NewMysqlOptions()),
-			rdb:        GetRedisInstance(options.NewRedisOptions()),
-			tencentOpt: options.NewTencentOptions(),
-			aliyunOpt:  options.NewAliyunOptions(),
+			db:  GetMysqlInstance(config.NewMysqlOptions()),
+			rdb: GetRedisInstance(config.NewRedisOptions()),
 		}
 	}
 	return factory

@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"microservices/logic"
 	"microservices/repository"
+	"microservices/service"
 )
 
 type NotifyApi interface {
@@ -27,8 +28,8 @@ func (n *notifyController) SendSms(c *gin.Context) (map[string]any, error) {
 	return nil, nil
 }
 
-func NewNotifyController(factory repository.Factory) NotifyApi {
+func NewNotifyController(repo repository.Factory, service service.Factory) NotifyApi {
 	return &notifyController{
-		logic: logic.NewLogic(factory),
+		logic: logic.NewLogic(repo, service),
 	}
 }

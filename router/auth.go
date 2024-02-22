@@ -4,10 +4,11 @@ import (
 	"microservices/controller"
 	"microservices/repository"
 	"microservices/router/middleware"
+	"microservices/service"
 )
 
 func init() {
-	authService := controller.NewAuthController(repository.NewFactory())
+	authService := controller.NewAuthController(repository.NewFactory(), service.NewFactory())
 	router.POST("/auth/login", authService.Login)
 	router.POST("/auth/logout", middleware.Authenticate(), authService.Logout)
 	router.POST("/auth/change-password", middleware.Authenticate(), authService.ChangePassword)

@@ -1,8 +1,4 @@
-package options
-
-import (
-	"microservices/entity/config"
-)
+package config
 
 type TencentOptions struct {
 	MailServerAddress  string
@@ -10,7 +6,7 @@ type TencentOptions struct {
 }
 
 func NewTencentOptions() *TencentOptions {
-	env := config.GetConfig()
+	env := GetConfig()
 	return &TencentOptions{
 		MailServerAddress:  env.TencentMailServerAddress,
 		MailServerPassword: env.TencentMailServerPassword,

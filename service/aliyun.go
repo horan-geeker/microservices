@@ -1,11 +1,11 @@
-package repository
+package service
 
 import (
 	"context"
 	"encoding/json"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/dysmsapi"
 	log "github.com/sirupsen/logrus"
-	"microservices/entity/options"
+	"microservices/entity/config"
 )
 
 type Aliyun interface {
@@ -45,7 +45,7 @@ func (a *aliyun) SendSMSCode(ctx context.Context, phone string, code string) err
 	return nil
 }
 
-func newAliyun(aliyunOpt *options.AliyunOptions) Aliyun {
+func newAliyun(aliyunOpt *config.AliyunOptions) Aliyun {
 	return &aliyun{
 		accessKeyId:     aliyunOpt.AccessKeyId,
 		accessKeySecret: aliyunOpt.AccessKeySecret,

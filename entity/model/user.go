@@ -1,4 +1,4 @@
-package meta
+package model
 
 import (
 	"microservices/pkg/meta"

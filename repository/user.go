@@ -6,18 +6,18 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	consts2 "microservices/entity/consts"
-	"microservices/entity/meta"
+	"microservices/entity/model"
 	"time"
 )
 
 // User defines the user storage interface.
 type User interface {
-	Create(ctx context.Context, user *meta.User) error
+	Create(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, id uint64, data map[string]any) error
-	GetByUid(ctx context.Context, id uint64) (*meta.User, error)
-	GetByName(ctx context.Context, name string) (*meta.User, error)
-	GetByEmail(ctx context.Context, email string) (*meta.User, error)
-	GetByPhone(ctx context.Context, phone string) (*meta.User, error)
+	GetByUid(ctx context.Context, id uint64) (*model.User, error)
+	GetByName(ctx context.Context, name string) (*model.User, error)
+	GetByEmail(ctx context.Context, email string) (*model.User, error)
+	GetByPhone(ctx context.Context, phone string) (*model.User, error)
 	//List(ctx context.Context) ([]model.User, error)
 	SetToken(ctx context.Context, uid uint64, token string) error
 	GetToken(ctx context.Context, uid uint64) (string, error)
@@ -37,7 +37,7 @@ func newUsers(s *factoryImpl) User {
 }
 
 // Create .
-func (u *userImpl) Create(ctx context.Context, user *meta.User) error {
+func (u *userImpl) Create(ctx context.Context, user *model.User) error {
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 	return u.db.WithContext(ctx).Create(&user).Error
@@ -46,33 +46,33 @@ func (u *userImpl) Create(ctx context.Context, user *meta.User) error {
 // Update 更新用户表信息
 func (u *userImpl) Update(ctx context.Context, id uint64, data map[string]any) error {
 	data["updated_at"] = time.Now()
-	return u.db.WithContext(ctx).Model(meta.User{}).Where("id", id).UpdateColumns(data).Error
+	return u.db.WithContext(ctx).Model(model.User{}).Where("id", id).UpdateColumns(data).Error
 }
 
 // GetByUid return an user by the user identifier.
-func (u *userImpl) GetByUid(ctx context.Context, id uint64) (*meta.User, error) {
-	user := &meta.User{}
+func (u *userImpl) GetByUid(ctx context.Context, id uint64) (*model.User, error) {
+	user := &model.User{}
 	err := u.db.WithContext(ctx).Where("id = ?", id).Take(&user).Error
 	return user, err
 }
 
 // GetByName .
-func (u *userImpl) GetByName(ctx context.Context, name string) (*meta.User, error) {
-	user := &meta.User{}
+func (u *userImpl) GetByName(ctx context.Context, name string) (*model.User, error) {
+	user := &model.User{}
 	err := u.db.WithContext(ctx).Where("name = ?", name).Take(&user).Error
 	return user, err
 }
 
 // GetByEmail .
-func (u *userImpl) GetByEmail(ctx context.Context, email string) (*meta.User, error) {
-	user := &meta.User{}
+func (u *userImpl) GetByEmail(ctx context.Context, email string) (*model.User, error) {
+	user := &model.User{}
 	err := u.db.WithContext(ctx).Where("email = ?", email).Take(&user).Error
 	return user, err
 }
 
 // GetByPhone .
-func (u *userImpl) GetByPhone(ctx context.Context, phone string) (*meta.User, error) {
-	user := &meta.User{}
+func (u *userImpl) GetByPhone(ctx context.Context, phone string) (*model.User, error) {
+	user := &model.User{}
 	err := u.db.WithContext(ctx).Where("phone = ?", phone).Take(&user).Error
 	return user, err
 }
