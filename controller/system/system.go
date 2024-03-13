@@ -1,4 +1,4 @@
-package controller
+package system
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,23 +8,23 @@ import (
 	"microservices/service"
 )
 
-type SystemApi interface {
+type Controller interface {
 	Health(c *gin.Context) (map[string]any, error)
 }
 
-type SystemController struct {
+type controller struct {
 	logic logic.Factory
 }
 
 // Health .
-func (s *SystemController) Health(c *gin.Context) (map[string]any, error) {
+func (s *controller) Health(c *gin.Context) (map[string]any, error) {
 	return map[string]interface{}{
 		"status": "UP",
 	}, nil
 }
 
-func NewSystemController(model model.Factory, cache cache.Factory, service service.Factory) SystemApi {
-	return &SystemController{
+func NewController(model model.Factory, cache cache.Factory, service service.Factory) Controller {
+	return &controller{
 		logic: logic.NewLogic(model, cache, service),
 	}
 }

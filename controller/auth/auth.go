@@ -1,4 +1,4 @@
-package controller
+package auth
 
 import (
 	"github.com/gin-gonic/gin"
@@ -10,19 +10,19 @@ import (
 	"time"
 )
 
-type AuthApi interface {
+type Controller interface {
 	ChangePassword(c *gin.Context, param *api.ChangePasswordParams) (map[string]any, error)
 	ChangePasswordByPhone(c *gin.Context, param *api.ChangePasswordByPhoneParams) (map[string]any, error)
 	Login(c *gin.Context, params *api.LoginParams) (map[string]any, error)
 	Logout(c *gin.Context) (map[string]any, error)
 }
 
-type authControllerImpl struct {
+type controller struct {
 	logic logic.Factory
 }
 
 // ChangePassword .
-func (a *authControllerImpl) ChangePassword(c *gin.Context, param *api.ChangePasswordParams) (map[string]any, error) {
+func (a *controller) ChangePassword(c *gin.Context, param *api.ChangePasswordParams) (map[string]any, error) {
 	auth, err := a.logic.Auth().GetAuthUser(c.Request.Context())
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (a *authControllerImpl) ChangePassword(c *gin.Context, param *api.ChangePas
 	return nil, nil
 }
 
-func (a *authControllerImpl) ChangePasswordByPhone(c *gin.Context, param *api.ChangePasswordByPhoneParams) (map[string]any, error) {
+func (a *controller) ChangePasswordByPhone(c *gin.Context, param *api.ChangePasswordByPhoneParams) (map[string]any, error) {
 	if err := a.logic.Auth().ChangePasswordByPhone(c.Request.Context(), param.NewPassword, param.Phone, param.SmsCode); err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (a *authControllerImpl) ChangePasswordByPhone(c *gin.Context, param *api.Ch
 }
 
 // Login .
-func (a *authControllerImpl) Login(c *gin.Context, params *api.LoginParams) (map[string]any, error) {
+func (a *controller) Login(c *gin.Context, params *api.LoginParams) (map[string]any, error) {
 	user, token, err := a.logic.Auth().Login(c.Request.Context(), params.Name, params.Email, params.Phone, params.Password,
 		params.SmsCode, params.EmailCode)
 	if err != nil {
@@ -61,7 +61,7 @@ func (a *authControllerImpl) Login(c *gin.Context, params *api.LoginParams) (map
 }
 
 // Logout .
-func (a *authControllerImpl) Logout(c *gin.Context) (map[string]any, error) {
+func (a *controller) Logout(c *gin.Context) (map[string]any, error) {
 	auth, err := a.logic.Auth().GetAuthUser(c.Request.Context())
 	if err != nil {
 		return nil, err
@@ -72,8 +72,8 @@ func (a *authControllerImpl) Logout(c *gin.Context) (map[string]any, error) {
 	return nil, nil
 }
 
-func NewAuthController(model model.Factory, cache cache.Factory, serviceFactory service.Factory) AuthApi {
-	return &authControllerImpl{
+func NewController(model model.Factory, cache cache.Factory, serviceFactory service.Factory) Controller {
+	return &controller{
 		logic: logic.NewLogic(model, cache, serviceFactory),
 	}
 }

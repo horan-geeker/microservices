@@ -2,12 +2,12 @@ package router
 
 import (
 	"microservices/cache"
-	"microservices/controller"
+	"microservices/controller/notify"
 	"microservices/model"
 	"microservices/service"
 )
 
 func init() {
-	notifyController := controller.NewNotifyController(model.NewFactory(), cache.NewFactory(), service.NewFactory())
+	notifyController := notify.NewController(model.NewFactory(), cache.NewFactory(), service.NewFactory())
 	router.POST("/notify/sms", notifyController.SendSms)
 }

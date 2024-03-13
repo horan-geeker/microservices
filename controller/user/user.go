@@ -1,4 +1,4 @@
-package controller
+package user
 
 import (
 	"github.com/gin-gonic/gin"
@@ -10,17 +10,17 @@ import (
 	"microservices/service"
 )
 
-type UserApi interface {
+type Controller interface {
 	Edit(c *gin.Context, param *api.EditUserParam) (map[string]any, error)
 	Get(c *gin.Context, uid uint64) (map[string]any, error)
 	Register(c *gin.Context, params *api.RegisterParams) (map[string]any, error)
 }
 
-type UserController struct {
+type controller struct {
 	logic logic.Factory
 }
 
-func (u *UserController) Edit(c *gin.Context, param *api.EditUserParam) (map[string]any, error) {
+func (u *controller) Edit(c *gin.Context, param *api.EditUserParam) (map[string]any, error) {
 	token := c.GetHeader("Authorization")
 	if len(token) == 0 {
 		return nil, ecode.ErrTokenIsEmpty
@@ -37,7 +37,7 @@ func (u *UserController) Edit(c *gin.Context, param *api.EditUserParam) (map[str
 }
 
 // Get .
-func (u *UserController) Get(c *gin.Context, uid uint64) (map[string]any, error) {
+func (u *controller) Get(c *gin.Context, uid uint64) (map[string]any, error) {
 	userinfo, err := u.logic.User().GetByUid(c.Request.Context(), uid)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (u *UserController) Get(c *gin.Context, uid uint64) (map[string]any, error)
 }
 
 // Register .
-func (u *UserController) Register(c *gin.Context, params *api.RegisterParams) (map[string]any, error) {
+func (u *controller) Register(c *gin.Context, params *api.RegisterParams) (map[string]any, error) {
 	user, token, err := u.logic.Auth().Register(c.Request.Context(), params.Name, params.Email, params.Phone, params.Password)
 	if err != nil {
 		return nil, err
@@ -61,9 +61,9 @@ func (u *UserController) Register(c *gin.Context, params *api.RegisterParams) (m
 	}, nil
 }
 
-// NewUserController .
-func NewUserController(model model.Factory, cache cache.Factory, service service.Factory) UserApi {
-	return &UserController{
+// NewController .
+func NewController(model model.Factory, cache cache.Factory, service service.Factory) Controller {
+	return &controller{
 		logic: logic.NewLogic(model, cache, service),
 	}
 }
