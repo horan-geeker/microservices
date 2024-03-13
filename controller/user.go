@@ -3,9 +3,10 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"microservices/api"
+	"microservices/cache"
 	"microservices/entity/ecode"
 	"microservices/logic"
-	"microservices/repository"
+	"microservices/model"
 	"microservices/service"
 )
 
@@ -16,7 +17,7 @@ type UserApi interface {
 }
 
 type UserController struct {
-	logic logic.LogicInterface
+	logic logic.Factory
 }
 
 func (u *UserController) Edit(c *gin.Context, param *api.EditUserParam) (map[string]any, error) {
@@ -28,7 +29,7 @@ func (u *UserController) Edit(c *gin.Context, param *api.EditUserParam) (map[str
 	if err != nil {
 		return nil, err
 	}
-	err = u.logic.Users().Edit(c.Request.Context(), auth.Uid, param.Name, param.Email, param.Phone)
+	err = u.logic.User().Edit(c.Request.Context(), auth.Uid, param.Name, param.Email, param.Phone)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +38,7 @@ func (u *UserController) Edit(c *gin.Context, param *api.EditUserParam) (map[str
 
 // Get .
 func (u *UserController) Get(c *gin.Context, uid uint64) (map[string]any, error) {
-	userinfo, err := u.logic.Users().GetByUid(c.Request.Context(), uid)
+	userinfo, err := u.logic.User().GetByUid(c.Request.Context(), uid)
 	if err != nil {
 		return nil, err
 	}
@@ -61,8 +62,8 @@ func (u *UserController) Register(c *gin.Context, params *api.RegisterParams) (m
 }
 
 // NewUserController .
-func NewUserController(repositoryFactory repository.Factory, serviceFactory service.Factory) UserApi {
+func NewUserController(model model.Factory, cache cache.Factory, service service.Factory) UserApi {
 	return &UserController{
-		logic: logic.NewLogic(repositoryFactory, serviceFactory),
+		logic: logic.NewLogic(model, cache, service),
 	}
 }

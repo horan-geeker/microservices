@@ -6,15 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 	redis2 "github.com/redis/go-redis/v9"
 	"io"
+	"microservices/cache"
 	options2 "microservices/entity/config"
 	"microservices/entity/ecode"
 	"microservices/entity/jwt"
 	"microservices/pkg/app"
-	"microservices/repository"
 )
 
 func Authenticate() gin.HandlerFunc {
-	factory := repository.NewFactory()
+	cache := cache.NewFactory()
 	return func(c *gin.Context) {
 		buf, _ := io.ReadAll(c.Request.Body)
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(buf))
@@ -32,7 +32,7 @@ func Authenticate() gin.HandlerFunc {
 			return
 		}
 		// 判断是否被注销
-		token, err := factory.Users().GetToken(c.Request.Context(), authClaims.Uid)
+		token, err := cache.User().GetToken(c.Request.Context(), authClaims.Uid)
 		if err == redis2.Nil {
 			app.MakeErrorResponse(c, ecode.ErrTokenDiscard)
 			c.Abort()

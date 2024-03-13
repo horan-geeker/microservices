@@ -2,28 +2,33 @@ package service
 
 import "microservices/entity/config"
 
+var srv Factory
+
 type Factory interface {
 	Tencent() Tencent
 	Aliyun() Aliyun
 }
 
-type factoryImpl struct {
+type factory struct {
 	tencentOpt *config.TencentOptions
 	aliyunOpt  *config.AliyunOptions
 }
 
-func (f *factoryImpl) Tencent() Tencent {
+func (f *factory) Tencent() Tencent {
 	return newTencent(f.tencentOpt)
 }
 
-func (f *factoryImpl) Aliyun() Aliyun {
+func (f *factory) Aliyun() Aliyun {
 	return newAliyun(f.aliyunOpt)
 }
 
 // NewFactory .
 func NewFactory() Factory {
-	return &factoryImpl{
-		tencentOpt: config.NewTencentOptions(),
-		aliyunOpt:  config.NewAliyunOptions(),
+	if srv == nil {
+		srv = &factory{
+			tencentOpt: config.NewTencentOptions(),
+			aliyunOpt:  config.NewAliyunOptions(),
+		}
 	}
+	return srv
 }

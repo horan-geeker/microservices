@@ -1,4 +1,4 @@
-package repository
+package cache
 
 import (
 	"context"
@@ -48,6 +48,6 @@ func (a *authImpl) DeleteEmailCode(ctx context.Context, email string) error {
 	panic("implement me")
 }
 
-func newAuth(s *factoryImpl) Auth {
-	return &authImpl{rdb: s.rdb}
+func newAuth(rdb *redis.Client) Auth {
+	return &authImpl{rdb: rdb}
 }

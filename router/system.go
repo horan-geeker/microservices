@@ -1,12 +1,13 @@
 package router
 
 import (
+	"microservices/cache"
 	"microservices/controller"
-	"microservices/repository"
+	"microservices/model"
 	"microservices/service"
 )
 
 func init() {
-	systemController := controller.NewSystemController(repository.NewFactory(), service.NewFactory())
+	systemController := controller.NewSystemController(model.NewFactory(), cache.NewFactory(), service.NewFactory())
 	router.GET("/system/health", systemController.Health)
 }

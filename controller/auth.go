@@ -3,8 +3,9 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"microservices/api"
+	"microservices/cache"
 	"microservices/logic"
-	"microservices/repository"
+	"microservices/model"
 	"microservices/service"
 	"time"
 )
@@ -17,7 +18,7 @@ type AuthApi interface {
 }
 
 type authControllerImpl struct {
-	logic logic.LogicInterface
+	logic logic.Factory
 }
 
 // ChangePassword .
@@ -71,8 +72,8 @@ func (a *authControllerImpl) Logout(c *gin.Context) (map[string]any, error) {
 	return nil, nil
 }
 
-func NewAuthController(repositoryFactory repository.Factory, serviceFactory service.Factory) AuthApi {
+func NewAuthController(model model.Factory, cache cache.Factory, serviceFactory service.Factory) AuthApi {
 	return &authControllerImpl{
-		logic: logic.NewLogic(repositoryFactory, serviceFactory),
+		logic: logic.NewLogic(model, cache, serviceFactory),
 	}
 }

@@ -2,8 +2,9 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"microservices/cache"
 	"microservices/logic"
-	"microservices/repository"
+	"microservices/model"
 	"microservices/service"
 )
 
@@ -12,7 +13,7 @@ type SystemApi interface {
 }
 
 type SystemController struct {
-	logic logic.LogicInterface
+	logic logic.Factory
 }
 
 // Health .
@@ -22,8 +23,8 @@ func (s *SystemController) Health(c *gin.Context) (map[string]any, error) {
 	}, nil
 }
 
-func NewSystemController(repositoryFactory repository.Factory, serviceFactory service.Factory) SystemApi {
+func NewSystemController(model model.Factory, cache cache.Factory, service service.Factory) SystemApi {
 	return &SystemController{
-		logic: logic.NewLogic(repositoryFactory, serviceFactory),
+		logic: logic.NewLogic(model, cache, service),
 	}
 }

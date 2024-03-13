@@ -2,48 +2,50 @@ package user
 
 import (
 	"context"
-	"microservices/entity/model"
-	"microservices/repository"
+	"microservices/cache"
+	entity "microservices/entity/model"
+	"microservices/model"
 	"microservices/service"
 )
 
-// UserLogicInterface defines functions used to handle user api.
-type UserLogicInterface interface {
-	Create(ctx context.Context, user *model.User) error
-	GetByUid(ctx context.Context, uid uint64) (*model.User, error)
-	List(ctx context.Context) ([]model.User, error)
+// Logic defines functions used to handle user api.
+type Logic interface {
+	Create(ctx context.Context, user *entity.User) error
+	GetByUid(ctx context.Context, uid uint64) (*entity.User, error)
+	List(ctx context.Context) ([]entity.User, error)
 	Edit(ctx context.Context, id uint64, name, email, phone *string) error
 }
 
-type userLogic struct {
-	repo repository.Factory
-	srv  service.Factory
+type logic struct {
+	model model.Factory
+	cache cache.Factory
+	srv   service.Factory
 }
 
-func NewUsers(repo repository.Factory, service service.Factory) *userLogic {
-	return &userLogic{repo: repo, srv: service}
+func NewLogic(model model.Factory, cache cache.Factory, service service.Factory) Logic {
+	return &logic{model: model, cache: cache, srv: service}
 }
 
 // Create .
-func (u *userLogic) Create(ctx context.Context, user *model.User) error {
-	//return u.repo.Users().Create(ctx, user)
+func (u *logic) Create(ctx context.Context, user *entity.User) error {
+	//return u.model.User().Create(ctx, user)
 	return nil
 }
 
 // GetByUid .
-func (u *userLogic) GetByUid(ctx context.Context, uid uint64) (*model.User, error) {
-	return u.repo.Users().GetByUid(ctx, uid)
+func (u *logic) GetByUid(ctx context.Context, uid uint64) (*entity.User, error) {
+	return u.model.User().GetByUid(ctx, uid)
 }
 
 // List .
-func (u *userLogic) List(ctx context.Context) ([]model.User, error) {
-	//return u.repo.Users().List(ctx)
+func (u *logic) List(ctx context.Context) ([]entity.User, error) {
+	//return u.model.User().List(ctx)
 	return nil, nil
 }
 
 // Edit .
-func (u *userLogic) Edit(ctx context.Context, id uint64, name, email, phone *string) error {
-	user, err := u.repo.Users().GetByUid(ctx, id)
+func (u *logic) Edit(ctx context.Context, id uint64, name, email, phone *string) error {
+	user, err := u.model.User().GetByUid(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -57,5 +59,5 @@ func (u *userLogic) Edit(ctx context.Context, id uint64, name, email, phone *str
 	if phone != nil {
 		data["phone"] = *phone
 	}
-	return u.repo.Users().Update(ctx, user.ID, data)
+	return u.model.User().Update(ctx, user.ID, data)
 }

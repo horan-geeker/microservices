@@ -2,8 +2,9 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"microservices/cache"
 	"microservices/logic"
-	"microservices/repository"
+	"microservices/model"
 	"microservices/service"
 )
 
@@ -13,7 +14,7 @@ type NotifyApi interface {
 }
 
 type notifyController struct {
-	logic logic.LogicInterface
+	logic logic.Factory
 }
 
 func (n *notifyController) SendEmail(c *gin.Context) (map[string]any, error) {
@@ -28,8 +29,8 @@ func (n *notifyController) SendSms(c *gin.Context) (map[string]any, error) {
 	return nil, nil
 }
 
-func NewNotifyController(repo repository.Factory, service service.Factory) NotifyApi {
+func NewNotifyController(model model.Factory, cache cache.Factory, service service.Factory) NotifyApi {
 	return &notifyController{
-		logic: logic.NewLogic(repo, service),
+		logic: logic.NewLogic(model, cache, service),
 	}
 }

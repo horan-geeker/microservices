@@ -1,38 +1,40 @@
 package logic
 
 import (
+	"microservices/cache"
 	"microservices/logic/auth"
 	"microservices/logic/notify"
 	"microservices/logic/user"
-	"microservices/repository"
+	"microservices/model"
 	"microservices/service"
 )
 
-// LogicInterface defines functions used to return resource interface.
-type LogicInterface interface {
-	Users() user.UserLogicInterface
-	Auth() auth.AuthLogicInterface
-	Notify() notify.NotifyLogicInterface
+// Factory defines functions used to return resource interface.
+type Factory interface {
+	User() user.Logic
+	Auth() auth.Logic
+	Notify() notify.Logic
 }
 
-type logic struct {
-	repository repository.Factory
-	service    service.Factory
+type factory struct {
+	model   model.Factory
+	cache   cache.Factory
+	service service.Factory
 }
 
-func (l *logic) Notify() notify.NotifyLogicInterface {
-	return notify.NewNotify(l.repository, l.service)
+func (l *factory) Notify() notify.Logic {
+	return notify.NewNotify(l.model, l.cache, l.service)
 }
 
-func (l *logic) Users() user.UserLogicInterface {
-	return user.NewUsers(l.repository, l.service)
+func (l *factory) User() user.Logic {
+	return user.NewLogic(l.model, l.cache, l.service)
 }
 
-func (l *logic) Auth() auth.AuthLogicInterface {
-	return auth.NewAuth(l.repository, l.service)
+func (l *factory) Auth() auth.Logic {
+	return auth.NewAuth(l.model, l.cache, l.service)
 }
 
 // NewLogic .
-func NewLogic(repo repository.Factory, service service.Factory) LogicInterface {
-	return &logic{repo, service}
+func NewLogic(model model.Factory, cache cache.Factory, service service.Factory) Factory {
+	return &factory{model, cache, service}
 }
