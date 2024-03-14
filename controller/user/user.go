@@ -12,7 +12,7 @@ import (
 
 type Controller interface {
 	Edit(c *gin.Context, param *api.EditUserParam) (map[string]any, error)
-	Get(c *gin.Context, uid uint64) (map[string]any, error)
+	Get(c *gin.Context, uid int) (map[string]any, error)
 	Register(c *gin.Context, params *api.RegisterParams) (map[string]any, error)
 }
 
@@ -37,7 +37,7 @@ func (u *controller) Edit(c *gin.Context, param *api.EditUserParam) (map[string]
 }
 
 // Get .
-func (u *controller) Get(c *gin.Context, uid uint64) (map[string]any, error) {
+func (u *controller) Get(c *gin.Context, uid int) (map[string]any, error) {
 	userinfo, err := u.logic.User().GetByUid(c.Request.Context(), uid)
 	if err != nil {
 		return nil, err

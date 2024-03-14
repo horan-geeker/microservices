@@ -11,8 +11,8 @@ import (
 // User defines the user storage interface.
 type User interface {
 	Create(ctx context.Context, user *model.User) error
-	Update(ctx context.Context, id uint64, data map[string]any) error
-	GetByUid(ctx context.Context, id uint64) (*model.User, error)
+	Update(ctx context.Context, id int, data map[string]any) error
+	GetByUid(ctx context.Context, id int) (*model.User, error)
 	GetByName(ctx context.Context, name string) (*model.User, error)
 	GetByEmail(ctx context.Context, email string) (*model.User, error)
 	GetByPhone(ctx context.Context, phone string) (*model.User, error)
@@ -38,13 +38,13 @@ func (u *user) Create(ctx context.Context, user *model.User) error {
 }
 
 // Update 更新用户表信息
-func (u *user) Update(ctx context.Context, id uint64, data map[string]any) error {
+func (u *user) Update(ctx context.Context, id int, data map[string]any) error {
 	data["updated_at"] = time.Now()
 	return u.db.WithContext(ctx).Where("id", id).UpdateColumns(data).Error
 }
 
 // GetByUid return an user by the user identifier.
-func (u *user) GetByUid(ctx context.Context, id uint64) (t *model.User, err error) {
+func (u *user) GetByUid(ctx context.Context, id int) (t *model.User, err error) {
 	err = u.db.WithContext(ctx).Where("id = ?", id).Take(&t).Error
 	return
 }

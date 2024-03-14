@@ -11,9 +11,9 @@ import (
 // Logic defines functions used to handle user api.
 type Logic interface {
 	Create(ctx context.Context, user *entity.User) error
-	GetByUid(ctx context.Context, uid uint64) (*entity.User, error)
+	GetByUid(ctx context.Context, uid int) (*entity.User, error)
 	List(ctx context.Context) ([]entity.User, error)
-	Edit(ctx context.Context, id uint64, name, email, phone *string) error
+	Edit(ctx context.Context, id int, name, email, phone *string) error
 }
 
 type logic struct {
@@ -33,7 +33,7 @@ func (u *logic) Create(ctx context.Context, user *entity.User) error {
 }
 
 // GetByUid .
-func (u *logic) GetByUid(ctx context.Context, uid uint64) (*entity.User, error) {
+func (u *logic) GetByUid(ctx context.Context, uid int) (*entity.User, error) {
 	return u.model.User().GetByUid(ctx, uid)
 }
 
@@ -44,7 +44,7 @@ func (u *logic) List(ctx context.Context) ([]entity.User, error) {
 }
 
 // Edit .
-func (u *logic) Edit(ctx context.Context, id uint64, name, email, phone *string) error {
+func (u *logic) Edit(ctx context.Context, id int, name, email, phone *string) error {
 	user, err := u.model.User().GetByUid(ctx, id)
 	if err != nil {
 		return err

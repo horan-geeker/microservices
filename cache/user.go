@@ -10,9 +10,9 @@ import (
 
 // User defines the user storage interface.
 type User interface {
-	SetToken(ctx context.Context, uid uint64, token string) error
-	GetToken(ctx context.Context, uid uint64) (string, error)
-	DeleteToken(ctx context.Context, uid uint64) error
+	SetToken(ctx context.Context, uid int, token string) error
+	GetToken(ctx context.Context, uid int) (string, error)
+	DeleteToken(ctx context.Context, uid int) error
 }
 
 type user struct {
@@ -26,14 +26,14 @@ func newUser(rdb *redis.Client) User {
 	}
 }
 
-func (u *user) SetToken(ctx context.Context, id uint64, token string) error {
+func (u *user) SetToken(ctx context.Context, id int, token string) error {
 	return u.rdb.Set(ctx, fmt.Sprintf(consts2.RedisUserTokenKey, id), token, consts2.UserTokenExpiredIn).Err()
 }
 
-func (u *user) GetToken(ctx context.Context, id uint64) (string, error) {
+func (u *user) GetToken(ctx context.Context, id int) (string, error) {
 	return u.rdb.Get(ctx, fmt.Sprintf(consts2.RedisUserTokenKey, id)).Result()
 }
 
-func (u *user) DeleteToken(ctx context.Context, id uint64) error {
+func (u *user) DeleteToken(ctx context.Context, id int) error {
 	return u.rdb.Del(ctx, fmt.Sprintf(consts2.RedisUserTokenKey, id)).Err()
 }

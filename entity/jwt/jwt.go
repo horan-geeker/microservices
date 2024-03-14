@@ -14,7 +14,7 @@ type Jwt struct {
 
 // AuthClaims .
 type AuthClaims struct {
-	Uid uint64 `json:"uid"`
+	Uid int `json:"uid"`
 	jwt.StandardClaims
 }
 
@@ -34,7 +34,7 @@ func (j *Jwt) DecodeToken(tokenString string) (*AuthClaims, error) {
 }
 
 // GenerateToken .
-func (j *Jwt) GenerateToken(id uint64) (string, error) {
+func (j *Jwt) GenerateToken(id int) (string, error) {
 	c := AuthClaims{
 		id,
 		jwt.StandardClaims{

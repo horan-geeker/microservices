@@ -79,11 +79,11 @@ func (a *App) wrapperGin(handle any) gin.HandlerFunc {
 	t := reflect.TypeOf(handle)
 	f := reflect.ValueOf(handle)
 	argsNum := t.NumIn()
-	var urlParamsType []reflect.Kind
+	var controllerParamsType []reflect.Kind
 	var bodyStruct any
 	// 控制器最后一个参数是结构体解析的 body
 	for i := 0; i < argsNum-1; i++ {
-		urlParamsType = append(urlParamsType, t.In(argsNum-1).Kind())
+		controllerParamsType = append(controllerParamsType, t.In(argsNum-1).Kind())
 	}
 	if argsNum > 1 && t.In(argsNum-1).Kind() == reflect.Pointer {
 		bodyStruct = reflect.New(t.In(1).Elem()).Interface()
@@ -93,22 +93,21 @@ func (a *App) wrapperGin(handle any) gin.HandlerFunc {
 		// 在框架初始化的时候通过反射获取类型同时注册路由，这样就不需要在controller里每次获取参数映射，而变成了函数参数
 		var values []reflect.Value
 		values = append(values, reflect.ValueOf(c))
-		urlParams := a.parseUrlParams(c)
-		if len(urlParams) > 0 {
-			for index, urlParam := range urlParams {
-				arg := urlParam
-				if urlParamsType[index] == reflect.Uint64 || urlParamsType[index] == reflect.Int {
-					intId, err := strconv.Atoi(urlParam.(string))
-					if err != nil {
-						MakeErrorResponse(c, err)
-						return
-					}
-					if urlParamsType[index] == reflect.Uint64 {
-						arg = uint64(intId)
-					}
+		for index, param := range c.Params {
+			var arg any
+			if controllerParamsType[index] == reflect.Int {
+				intId, err := strconv.Atoi(param.Value)
+				if err != nil {
+					MakeErrorResponse(c, errors2.Wrapper(errors2.ErrRouteParamInvalid, fmt.Sprintf(" controller path:%s url path:%s", param.Key, param.Value)))
+					return
 				}
-				values = append(values, reflect.ValueOf(arg))
+				if controllerParamsType[index] == reflect.Int {
+					arg = intId
+				}
+			} else {
+				arg = param.Value
 			}
+			values = append(values, reflect.ValueOf(arg))
 		}
 		if bodyStruct != nil {
 			param, err := a.parseBodyToJsonStruct(c, bodyStruct)

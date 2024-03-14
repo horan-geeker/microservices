@@ -95,7 +95,7 @@ func (mr *MockUserStoreMockRecorder) GetByPhone(ctx, phone interface{}) *gomock.
 }
 
 // GetByUid mocks base method.
-func (m *MockUserStore) GetByUid(ctx context.Context, id uint64) (*meta.User, error) {
+func (m *MockUserStore) GetByUid(ctx context.Context, id int) (*meta.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetByUid", ctx, id)
 	ret0, _ := ret[0].(*meta.User)
@@ -110,7 +110,7 @@ func (mr *MockUserStoreMockRecorder) GetByUid(ctx, id interface{}) *gomock.Call 
 }
 
 // Update mocks base method.
-func (m *MockUserStore) Update(ctx context.Context, id uint64, data map[string]any) error {
+func (m *MockUserStore) Update(ctx context.Context, id int, data map[string]any) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", ctx, id, data)
 	ret0, _ := ret[0].(error)
@@ -147,7 +147,7 @@ func (m *MockUserCache) EXPECT() *MockUserCacheMockRecorder {
 }
 
 // DeleteToken mocks base method.
-func (m *MockUserCache) DeleteToken(ctx context.Context, uid uint64) error {
+func (m *MockUserCache) DeleteToken(ctx context.Context, uid int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteToken", ctx, uid)
 	ret0, _ := ret[0].(error)
@@ -161,7 +161,7 @@ func (mr *MockUserCacheMockRecorder) DeleteToken(ctx, uid interface{}) *gomock.C
 }
 
 // GetToken mocks base method.
-func (m *MockUserCache) GetToken(ctx context.Context, uid uint64) (string, error) {
+func (m *MockUserCache) GetToken(ctx context.Context, uid int) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetToken", ctx, uid)
 	ret0, _ := ret[0].(string)
@@ -176,7 +176,7 @@ func (mr *MockUserCacheMockRecorder) GetToken(ctx, uid interface{}) *gomock.Call
 }
 
 // SetToken mocks base method.
-func (m *MockUserCache) SetToken(ctx context.Context, uid uint64, token string) error {
+func (m *MockUserCache) SetToken(ctx context.Context, uid int, token string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetToken", ctx, uid, token)
 	ret0, _ := ret[0].(error)

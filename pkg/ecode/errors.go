@@ -40,7 +40,7 @@ func GetHttpStatusByErr(err error) int {
 var (
 	ErrInternalServerError = errors.New("系统内部错误")
 	ErrDataNotFound        = errors.New("数据不存在")
-	ErrRouteParamInvalid   = errors.New("路由参数无效")
+	ErrRouteParamInvalid   = errors.New("URL路由参数无效")
 )
 
 const (
@@ -54,4 +54,11 @@ func init() {
 	Register(ErrInternalServerError, InternalServerErrorCode, http.StatusInternalServerError)
 	Register(ErrDataNotFound, DataNotFound, http.StatusNotFound)
 	Register(ErrRouteParamInvalid, RouteParamInvalid, http.StatusBadRequest)
+}
+
+func Wrapper(err error, msg string) error {
+	eMsg := err.Error()
+	newErr := errors.New(eMsg + msg)
+	Register(newErr, GetErrCodeByErr(err), GetHttpStatusByErr(err))
+	return newErr
 }

@@ -19,9 +19,9 @@ import (
 // Logic defines functions used to handle user api.
 type Logic interface {
 	Login(ctx context.Context, name, email, phone, password, smsCode, emailCode *string) (*entity.User, string, error)
-	Logout(ctx context.Context, uid uint64) error
+	Logout(ctx context.Context, uid int) error
 	Register(ctx context.Context, name, email, phone, password *string) (*entity.User, string, error)
-	ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword string) error
+	ChangePassword(ctx context.Context, uid int, newPassword string, oldPassword string) error
 	ChangePasswordByPhone(ctx context.Context, newPassword, phone, smsCode string) error
 	VerifyPassword(password string, inputPasswd string) bool
 	VerifySmsCode(ctx context.Context, phone string, smsCode string) error
@@ -99,7 +99,7 @@ func (a *logic) Login(ctx context.Context, name, email, phone, password, smsCode
 }
 
 // Logout .
-func (a *logic) Logout(ctx context.Context, uid uint64) error {
+func (a *logic) Logout(ctx context.Context, uid int) error {
 	if err := a.cache.User().DeleteToken(ctx, uid); err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (a *logic) Register(ctx context.Context, name, email, phone, password *stri
 }
 
 // ChangePassword .
-func (a *logic) ChangePassword(ctx context.Context, uid uint64, newPassword string, oldPassword string) error {
+func (a *logic) ChangePassword(ctx context.Context, uid int, newPassword string, oldPassword string) error {
 	user, err := a.model.User().GetByUid(ctx, uid)
 	if err != nil {
 		return err
