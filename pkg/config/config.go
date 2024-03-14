@@ -1,8 +1,15 @@
 package config
 
-func NewConfig[T any](conf *T) error {
-	if err := ParseConfigFromEnvFile[T](conf); err != nil {
-		return err
-	}
-	return nil
+type Provider interface {
+	GetContent() (map[string]string, error)
+}
+
+var provider Provider
+
+func GetConfig() (map[string]string, error) {
+	return provider.GetContent()
+}
+
+func RegisterProvider(instance Provider) {
+	provider = instance
 }

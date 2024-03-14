@@ -5,7 +5,7 @@ import (
 )
 
 func NewRedisOptions() *redis.Options {
-	env := GetConfig()
+	env := GetEnvConfig()
 	return &redis.Options{
 		Host:     env.RedisHost,
 		Password: env.RedisPassword,

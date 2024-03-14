@@ -17,37 +17,37 @@ type Auth interface {
 	DeleteEmailCode(ctx context.Context, email string) error
 }
 
-type authImpl struct {
+type auth struct {
 	rdb *redis.Client
 }
 
-func (a *authImpl) SetSmsCode(ctx context.Context, phone string, smsCode string) error {
+func (a *auth) SetSmsCode(ctx context.Context, phone string, smsCode string) error {
 	return a.rdb.Set(ctx, fmt.Sprintf(consts.RedisUserSmsKey, phone), smsCode, time.Minute).Err()
 }
 
-func (a *authImpl) GetSmsCode(ctx context.Context, phone string) (string, error) {
+func (a *auth) GetSmsCode(ctx context.Context, phone string) (string, error) {
 	return a.rdb.Get(ctx, fmt.Sprintf(consts.RedisUserSmsKey, phone)).Result()
 }
 
-func (a *authImpl) DeleteSmsCode(ctx context.Context, phone string) error {
+func (a *auth) DeleteSmsCode(ctx context.Context, phone string) error {
 	return a.rdb.Del(ctx, fmt.Sprintf(consts.RedisUserSmsKey, phone)).Err()
 }
 
-func (a *authImpl) GetEmailCode(ctx context.Context, email string) (string, error) {
+func (a *auth) GetEmailCode(ctx context.Context, email string) (string, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a *authImpl) SetEmailCode(ctx context.Context, email string, emailCode string) error {
+func (a *auth) SetEmailCode(ctx context.Context, email string, emailCode string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a *authImpl) DeleteEmailCode(ctx context.Context, email string) error {
+func (a *auth) DeleteEmailCode(ctx context.Context, email string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
 func newAuth(rdb *redis.Client) Auth {
-	return &authImpl{rdb: rdb}
+	return &auth{rdb: rdb}
 }

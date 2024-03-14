@@ -20,11 +20,11 @@ type factory struct {
 	rdb *redis.Client
 }
 
-func (f factory) Auth() Auth {
+func (f *factory) Auth() Auth {
 	return newAuth(f.rdb)
 }
 
-func (f factory) User() User {
+func (f *factory) User() User {
 	return newUser(f.rdb)
 }
 
