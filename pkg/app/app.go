@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"io"
-	"microservices/internal/entity"
+	"microservices/entity"
 	errors2 "microservices/pkg/ecode"
 	"microservices/pkg/log"
 	"microservices/pkg/util"
@@ -58,13 +58,17 @@ func (a *App) Handle(httpMethod, relativePath string, customHandlers ...any) gin
 	for _, handler := range customHandlers {
 		var ginHandlerFunc gin.HandlerFunc
 		name := util.GetFunctionName(handler)
-		if strings.Contains(name, "internal/controller") {
+		if strings.Contains(name, "/controller/") {
 			if err := a.validateController(handler); err != nil {
 				panic(err)
 			}
 			ginHandlerFunc = a.wrapperGin(handler)
 		} else {
-			ginHandlerFunc = handler.(gin.HandlerFunc)
+			var ok bool
+			ginHandlerFunc, ok = handler.(gin.HandlerFunc)
+			if !ok {
+				panic(ok)
+			}
 		}
 		handlers = append(handlers, ginHandlerFunc)
 	}
@@ -244,8 +248,12 @@ func NewApp(options *ServerOptions, middleware ...gin.HandlerFunc) *App {
 			serverOptions: options,
 		}
 		app.Use(middleware...)
-		return app
 	}
+	return app
+}
+
+// GetApp .
+func GetApp() *App {
 	return app
 }
 

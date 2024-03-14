@@ -2,20 +2,13 @@ package main
 
 import (
 	"context"
-	_ "microservices/internal/command"
-	"microservices/internal/config"
-	_ "microservices/internal/router"
+	_ "microservices/command"
 	"microservices/pkg/app"
-)
-
-// 初始化资源
-var (
-	env         = config.GetConfig()
-	application = app.NewApp(app.NewServerOptions(env.AppEnv, env.ServerHost, env.ServerPort, env.ServerTimeout))
+	_ "microservices/router"
 )
 
 func main() {
-	if err := application.Running(context.Background()); err != nil {
+	if err := app.GetApp().Running(context.Background()); err != nil {
 		panic(err)
 	}
 }
