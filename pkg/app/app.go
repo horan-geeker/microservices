@@ -85,9 +85,6 @@ func (a *App) wrapperGin(handle any) gin.HandlerFunc {
 	for i := 0; i < argsNum-1; i++ {
 		controllerParamsType = append(controllerParamsType, t.In(argsNum-1).Kind())
 	}
-	if argsNum > 1 && t.In(argsNum-1).Kind() == reflect.Pointer {
-		bodyStruct = reflect.New(t.In(1).Elem()).Interface()
-	}
 	// 下方函数是运行时
 	return func(c *gin.Context) {
 		// 在框架初始化的时候通过反射获取类型同时注册路由，这样就不需要在controller里每次获取参数映射，而变成了函数参数
@@ -109,7 +106,8 @@ func (a *App) wrapperGin(handle any) gin.HandlerFunc {
 			}
 			values = append(values, reflect.ValueOf(arg))
 		}
-		if bodyStruct != nil {
+		if argsNum > 1 && t.In(argsNum-1).Kind() == reflect.Pointer {
+			bodyStruct = reflect.New(t.In(1).Elem()).Interface()
 			param, err := a.parseBodyToJsonStruct(c, bodyStruct)
 			if err != nil {
 				return
