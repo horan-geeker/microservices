@@ -171,13 +171,17 @@ func (a *App) parseUrlParams(c *gin.Context) []any {
 
 func (a *App) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
 	if err := c.ShouldBindJSON(&reqStruct); err != nil {
+		errMsg := err.Error()
+		if errMsg == "EOF" {
+			errMsg = "empty json body"
+		}
 		traceId, _ := c.Request.Context().Value("traceId").(string)
 		spanId, _ := c.Request.Context().Value("spanId").(string)
 		c.JSON(400, gin.H{
 			"traceId": traceId,
 			"spanId":  spanId,
 			"code":    400,
-			"message": err.Error(),
+			"message": errMsg,
 			"data":    nil,
 		})
 		return nil, err

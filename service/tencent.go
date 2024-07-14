@@ -3,7 +3,7 @@ package service
 import (
 	"gopkg.in/gomail.v2"
 	"microservices/entity/config"
-	"microservices/pkg/consts"
+	"microservices/entity/consts"
 	"net/mail"
 )
 
