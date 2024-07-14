@@ -9,9 +9,11 @@ import (
 	"microservices/pkg/log"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type HttpRequest[T any] struct {
+	client  *http.Client
 	timeout int
 }
 
@@ -101,7 +103,7 @@ func (h *HttpRequest[T]) sendRequest(ctx context.Context, urlPath, method string
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
-	response, err := http.DefaultClient.Do(req)
+	response, err := h.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -120,6 +122,9 @@ func (h *HttpRequest[T]) sendRequest(ctx context.Context, urlPath, method string
 
 func NewHttp[T any](opts *Options) *HttpRequest[T] {
 	return &HttpRequest[T]{
+		client: &http.Client{
+			Timeout: time.Duration(opts.Timeout) * time.Second,
+		},
 		timeout: opts.Timeout,
 	}
 }
