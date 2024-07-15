@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/gocarina/gocsv"
 	"io"
+	"microservices/pkg/consts"
 	"microservices/pkg/log"
 	"net/http"
 	"net/url"
@@ -109,6 +110,10 @@ func (h *HttpRequest[T]) sendRequest(ctx context.Context, urlPath, method string
 	}
 	responseBody, err := io.ReadAll(response.Body)
 	response.Body = io.NopCloser(bytes.NewBuffer(responseBody))
+	responseStr := string(responseBody)
+	if len(responseBody) > consts.MaxResponseLogLength {
+		responseStr = responseStr[:consts.MaxResponseLogLength] + "..."
+	}
 	log.Info(ctx, "http-request", map[string]any{
 		"url":            urlPath,
 		"params":         urlParams,

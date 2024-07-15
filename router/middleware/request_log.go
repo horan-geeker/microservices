@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"math/rand"
+	"microservices/pkg/consts"
 	"strconv"
 	"time"
 )
@@ -62,8 +63,8 @@ func RequestLogger(c *gin.Context) {
 	c.Next()
 
 	body := blw.body.String()
-	if len(body) > 4096 {
-		body = body[:4096]
+	if len(body) > consts.MaxResponseLogLength {
+		body = body[:consts.MaxResponseLogLength] + "..."
 	}
 	// Log response body
 	log.WithFields(log.Fields{
