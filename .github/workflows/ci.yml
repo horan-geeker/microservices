@@ -55,7 +55,7 @@ jobs:
         run: |
           kubectl config use-context ${TKE_CLUSTER_ID}-context-default
   
-      # Deploy the Docker image to the TKE cluster
-      - name: Deploy to TKE
-        run: |
-          kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${TKE_IMAGE_URL}:${{steps.CURRENT_DATE.outputs.date}} --record
+      # Deploy the Docker image to the TKE cluster 由于腾讯云内外网访问集群需要购买 clb 所以无法使用 kubctl 在外网操作集群
+      # - name: Deploy to TKE
+      #   run: |
+      #     kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${TKE_IMAGE_URL}:${{steps.CURRENT_DATE.outputs.date}} --record
