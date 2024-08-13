@@ -12,6 +12,7 @@ env:
   TKE_REGION: ap-chengdu
   TKE_CLUSTER_ID: cls-kj6srqvx
   DEPLOYMENT_NAME: microservice
+  CONTAINER_NAME: container
 
 jobs:
 
@@ -42,11 +43,6 @@ jobs:
         run: docker push ${TKE_IMAGE_URL}:${{steps.CURRENT_DATE.outputs.date}}
 
       # deploy k8s
-      - name: Set up Kustomize
-        run: |
-          curl -o kustomize --location https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
-          chmod u+x ./kustomize
-  
       - name: Set up ~/.kube/config for connecting TKE cluster
         uses: TencentCloud/tke-cluster-credential-action@v1
         with:
@@ -60,9 +56,6 @@ jobs:
           kubectl config use-context ${TKE_CLUSTER_ID}-context-default
   
       # Deploy the Docker image to the TKE cluster
-      - name: Deploy
+      - name: Deploy to TKE
         run: |
-          ./kustomize edit set image ${TKE_IMAGE_URL}:${{steps.CURRENT_DATE.outputs.date}}
-          ./kustomize build . | kubectl apply -f -
-          kubectl rollout status deployment/${DEPLOYMENT_NAME}
-          kubectl get services -o wide
+          kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${TKE_IMAGE_URL}:${{steps.CURRENT_DATE.outputs.date}} --record
