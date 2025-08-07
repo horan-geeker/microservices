@@ -1,4 +1,4 @@
-FROM golang:1.20 AS build
+FROM golang:1.24 AS build
 
 ARG PROJECT_ROOT=/src
 ENV PROJECT_ROOT ${PROJECT_ROOT}

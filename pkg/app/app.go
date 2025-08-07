@@ -121,7 +121,7 @@ func (a *App) wrapperGin(handle any) gin.HandlerFunc {
 			MakeErrorResponse(c, errInterface)
 			return
 		}
-		data := values[0].Interface().(map[string]any)
+		data := values[0].Interface()
 		MakeSuccessResponse(c, data)
 	}
 }
@@ -189,7 +189,7 @@ func (a *App) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) 
 	return reqStruct, nil
 }
 
-func MakeSuccessResponse(c *gin.Context, data map[string]any) {
+func MakeSuccessResponse(c *gin.Context, data any) {
 	traceId, _ := c.Request.Context().Value("traceId").(string)
 	spanId, _ := c.Request.Context().Value("spanId").(string)
 	response := entity.Response{
