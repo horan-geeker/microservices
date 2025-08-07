@@ -1,4 +1,4 @@
-package api
+package request
 
 // GetUserParam .
 type GetUserParam struct {

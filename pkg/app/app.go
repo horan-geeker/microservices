@@ -149,8 +149,8 @@ func (a *App) validateController(controller any) error {
 	if t.NumOut() != 2 {
 		return errors.New(fmt.Sprintf("controller %s output args error", name))
 	}
-	if t.Out(0).Kind() != reflect.Map {
-		return errors.New(fmt.Sprintf("controller %s output first arg not map", name))
+	if t.Out(0).Kind() != reflect.Ptr {
+		return errors.New(fmt.Sprintf("controller %s output first arg not ptr", name))
 	}
 	if t.Out(1).Kind() != reflect.Interface {
 		return errors.New(fmt.Sprintf("controller %s output second arg not interface error", name))

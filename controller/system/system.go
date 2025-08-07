@@ -3,13 +3,14 @@ package system
 import (
 	"github.com/gin-gonic/gin"
 	"microservices/cache"
+	"microservices/entity/response"
 	"microservices/logic"
 	"microservices/model"
 	"microservices/service"
 )
 
 type Controller interface {
-	Health(c *gin.Context) (map[string]any, error)
+	Health(c *gin.Context) (*response.Health, error)
 }
 
 type controller struct {
@@ -17,9 +18,9 @@ type controller struct {
 }
 
 // Health .
-func (s *controller) Health(c *gin.Context) (map[string]any, error) {
-	return map[string]interface{}{
-		"status": "UP",
+func (s *controller) Health(c *gin.Context) (*response.Health, error) {
+	return &response.Health{
+		Status: "ok",
 	}, nil
 }
 

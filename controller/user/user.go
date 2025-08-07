@@ -2,25 +2,25 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"microservices/api"
 	"microservices/cache"
 	"microservices/entity/ecode"
+	"microservices/entity/request"
+	"microservices/entity/response"
 	"microservices/logic"
 	"microservices/model"
 	"microservices/service"
 )
 
 type Controller interface {
-	Edit(c *gin.Context, param *api.EditUserParam) (map[string]any, error)
-	Get(c *gin.Context, uid int) (map[string]any, error)
-	Register(c *gin.Context, params *api.RegisterParams) (map[string]any, error)
+	Edit(c *gin.Context, param *request.EditUserParam) (*response.EditUser, error)
+	Get(c *gin.Context, uid int) (*response.GetUser, error)
 }
 
 type controller struct {
 	logic logic.Factory
 }
 
-func (u *controller) Edit(c *gin.Context, param *api.EditUserParam) (map[string]any, error) {
+func (u *controller) Edit(c *gin.Context, param *request.EditUserParam) (*response.EditUser, error) {
 	token := c.GetHeader("Authorization")
 	if len(token) == 0 {
 		return nil, ecode.ErrTokenIsEmpty
@@ -37,27 +37,13 @@ func (u *controller) Edit(c *gin.Context, param *api.EditUserParam) (map[string]
 }
 
 // Get .
-func (u *controller) Get(c *gin.Context, uid int) (map[string]any, error) {
+func (u *controller) Get(c *gin.Context, uid int) (*response.GetUser, error) {
 	userinfo, err := u.logic.User().GetByUid(c.Request.Context(), uid)
 	if err != nil {
 		return nil, err
 	}
-	return map[string]any{
-		"user": userinfo,
-	}, nil
-}
-
-// Register .
-func (u *controller) Register(c *gin.Context, params *api.RegisterParams) (map[string]any, error) {
-	user, token, err := u.logic.Auth().Register(c.Request.Context(), params.Name, params.Email, params.Phone, params.Password)
-	if err != nil {
-		return nil, err
-	}
-	return map[string]any{
-		"user": map[string]any{
-			"id": user.ID,
-		},
-		"token": token,
+	return &response.GetUser{
+		User: userinfo,
 	}, nil
 }
 
