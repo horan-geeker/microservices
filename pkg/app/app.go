@@ -192,7 +192,7 @@ func (a *App) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) 
 func MakeSuccessResponse(c *gin.Context, data any) {
 	traceId, _ := c.Request.Context().Value("traceId").(string)
 	spanId, _ := c.Request.Context().Value("spanId").(string)
-	response := entity.Response{
+	response := entity.Response[any]{
 		TraceId: traceId,
 		SpanId:  spanId,
 		Data:    data,

@@ -13,6 +13,8 @@ env:
   TKE_CLUSTER_ID: cls-kj6srqvx
   DEPLOYMENT_NAME: microservice
   CONTAINER_NAME: container
+  COS_BUKET: swagger-1251473386
+  COS_REGION: ap-beijing
 
 jobs:
 
@@ -59,3 +61,31 @@ jobs:
       # - name: Deploy to TKE
       #   run: |
       #     kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${TKE_IMAGE_URL}:${{steps.CURRENT_DATE.outputs.date}} --record
+
+  deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.24
+
+      - name: Generate Swagger Docs
+        run: |
+          go install github.com/swaggo/swag/cmd/swag@latest
+          swag init -g main.go
+
+      - name: Upload to Tencent COS
+        uses: TencentCloud/cos-action@v1
+        with:
+          secret_id: ${{ secrets.COS_SECRET_ID }}
+          secret_key: ${{ secrets.COS_SECRET_KEY }}
+          bucket: ${{ env.COS_BUCKET }}
+          region: ${{ env.COS_REGION }}
+          local_path: './docs/swagger.json'
+          remote_path: '/'
+          clean: true
+          strip_prefix: 'swagger-static/'

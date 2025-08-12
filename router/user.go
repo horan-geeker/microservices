@@ -11,5 +11,5 @@ import (
 func init() {
 	userController := user.NewController(model.NewFactory(), cache.NewFactory(), service.NewFactory())
 	router.GET("/users/:id", userController.Get)
-	router.POST("/users/edit", middleware.Authenticate(), userController.Edit)
+	router.POST("/users/:id/edit", middleware.Authenticate(), userController.Edit)
 }

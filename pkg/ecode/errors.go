@@ -41,6 +41,7 @@ var (
 	ErrInternalServerError = errors.New("系统内部错误")
 	ErrDataNotFound        = errors.New("数据不存在")
 	ErrRouteParamInvalid   = errors.New("URL路由参数无效")
+	ErrUserAuthFail        = errors.New("用户登录态校验失败")
 )
 
 const (
@@ -48,12 +49,14 @@ const (
 	InternalServerErrorCode
 	DataNotFound
 	RouteParamInvalid
+	UserAuthFail
 )
 
 func init() {
 	Register(ErrInternalServerError, InternalServerErrorCode, http.StatusInternalServerError)
 	Register(ErrDataNotFound, DataNotFound, http.StatusNotFound)
 	Register(ErrRouteParamInvalid, RouteParamInvalid, http.StatusBadRequest)
+	Register(ErrUserAuthFail, UserAuthFail, http.StatusUnauthorized)
 }
 
 func Wrapper(err error, msg string) error {

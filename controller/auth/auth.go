@@ -3,6 +3,7 @@ package auth
 import (
 	"github.com/gin-gonic/gin"
 	"microservices/cache"
+	_ "microservices/entity"
 	"microservices/entity/request"
 	"microservices/entity/response"
 	"microservices/logic"
@@ -22,7 +23,16 @@ type controller struct {
 	logic logic.Factory
 }
 
-// ChangePassword .
+// ChangePassword 修改密码
+// @Summary 修改密码
+// @Description 用户修改自己的登录密码
+// @Tags 用户
+// @Accept json
+// @Produce json
+// @Param 请求体 body request.ChangePassword true "修改密码请求体"
+// @Success 200 {object} entity.Response[response.ChangePassword]
+// @Failure 400 {object} entity.Response[any]
+// @Router /auth/change-password [post]
 func (a *controller) ChangePassword(c *gin.Context, param *request.ChangePassword) (*response.ChangePassword, error) {
 	auth, err := a.logic.Auth().GetAuthUser(c.Request.Context())
 	if err != nil {
