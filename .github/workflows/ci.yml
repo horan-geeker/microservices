@@ -88,4 +88,3 @@ jobs:
           cos_region: ${{ env.COS_REGION }}
           local_path: './docs/swagger.json'
           remote_path: ${{ env.SWAGGER_REMOTE_PATH }}
-          clean: true
