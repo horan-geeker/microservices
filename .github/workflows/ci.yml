@@ -79,8 +79,8 @@ jobs:
           go install github.com/swaggo/swag/cmd/swag@latest
           swag init -g main.go
 
-      - name: Upload to Tencent COS
-        uses: TencentCloud/cos-action@v1
+      - name: TencentCloudCOSAction
+        uses: horan-geeker/cos-action@1.0.0
         with:
           secret_id: ${{ secrets.COS_SECRET_ID }}
           secret_key: ${{ secrets.COS_SECRET_KEY }}
