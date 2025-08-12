@@ -15,6 +15,7 @@ env:
   CONTAINER_NAME: container
   COS_BUKET: swagger-1251473386
   COS_REGION: ap-beijing
+  SWAGGER_REMOTE_PATH: course-assistant
 
 jobs:
 
@@ -83,9 +84,8 @@ jobs:
         with:
           secret_id: ${{ secrets.COS_SECRET_ID }}
           secret_key: ${{ secrets.COS_SECRET_KEY }}
-          bucket: ${{ env.COS_BUCKET }}
-          region: ${{ env.COS_REGION }}
+          cos_bucket: ${{ env.COS_BUCKET }}
+          cos_region: ${{ env.COS_REGION }}
           local_path: './docs/swagger.json'
-          remote_path: '/'
+          remote_path: ${{ env.SWAGGER_REMOTE_PATH }}
           clean: true
-          strip_prefix: 'swagger-static/'
