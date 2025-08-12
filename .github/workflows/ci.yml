@@ -13,7 +13,7 @@ env:
   TKE_CLUSTER_ID: cls-kj6srqvx
   DEPLOYMENT_NAME: microservice
   CONTAINER_NAME: container
-  COS_BUKET: swagger-1251473386
+  COS_BUCKET: swagger-1251473386
   COS_REGION: ap-beijing
   SWAGGER_REMOTE_PATH: course-assistant
 
