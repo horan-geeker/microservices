@@ -15,7 +15,7 @@ env:
   CONTAINER_NAME: container
   COS_BUCKET: swagger-1251473386
   COS_REGION: ap-beijing
-  SWAGGER_REMOTE_PATH: course-assistant
+  SWAGGER_REMOTE_PATH: course-assistant/swagger.json
 
 jobs:
 
