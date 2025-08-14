@@ -4,7 +4,7 @@
 // @termsOfService http://swagger.io/terms/
 // @contact.name horanhe
 // @contact.url https://github.com/horan-geeker
-// @contact.email horanhe@email.com
+// @contact.email hejunweimake@gmail.com
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 // @host localhost:80

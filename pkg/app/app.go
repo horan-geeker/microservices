@@ -79,49 +79,79 @@ func (a *App) wrapperGin(handle any) gin.HandlerFunc {
 	t := reflect.TypeOf(handle)
 	f := reflect.ValueOf(handle)
 	argsNum := t.NumIn()
-	var controllerParamsType []reflect.Kind
-	var bodyStruct any
-	// 控制器最后一个参数是结构体解析的 body
-	for i := 0; i < argsNum-1; i++ {
-		controllerParamsType = append(controllerParamsType, t.In(argsNum-1).Kind())
+
+	// 分析控制器参数结构
+	hasBodyParam := argsNum > 1 && t.In(argsNum-1).Kind() == reflect.Pointer
+	pathParamStart := 1 // 第一个参数是 gin.Context，从第二个开始是路径参数
+	pathParamEnd := argsNum
+	if hasBodyParam {
+		pathParamEnd = argsNum - 1 // 最后一个是请求体参数，排除
 	}
+
+	// 收集路径参数的类型信息
+	var pathParamTypes []reflect.Kind
+	for i := pathParamStart; i < pathParamEnd; i++ {
+		pathParamTypes = append(pathParamTypes, t.In(i).Kind())
+	}
+
 	// 下方函数是运行时
 	return func(c *gin.Context) {
-		// 在框架初始化的时候通过反射获取类型同时注册路由，这样就不需要在controller里每次获取参数映射，而变成了函数参数
 		var values []reflect.Value
 		values = append(values, reflect.ValueOf(c))
-		for index, param := range c.Params {
+
+		// 处理路径参数：动态匹配路径参数数量
+		pathParams := c.Params
+		expectedPathParamCount := len(pathParamTypes)
+		actualPathParamCount := len(pathParams)
+
+		// 验证路径参数数量是否匹配
+		if actualPathParamCount != expectedPathParamCount {
+			MakeErrorResponse(c, errors2.Wrapper(errors2.ErrRouteParamInvalid,
+				fmt.Sprintf("路径参数数量不匹配: 期望 %d 个，实际 %d 个", expectedPathParamCount, actualPathParamCount)))
+			return
+		}
+
+		// 按顺序处理每个路径参数
+		for i, param := range pathParams {
 			var arg any
-			if controllerParamsType[index] == reflect.Int {
+			paramType := pathParamTypes[i]
+
+			if paramType == reflect.Int {
 				intId, err := strconv.Atoi(param.Value)
 				if err != nil {
-					MakeErrorResponse(c, errors2.Wrapper(errors2.ErrRouteParamInvalid, fmt.Sprintf(" controller path:%s url path:%s", param.Key, param.Value)))
+					MakeErrorResponse(c, errors2.Wrapper(errors2.ErrRouteParamInvalid,
+						fmt.Sprintf("路径参数 %s 无法转换为整数: %s", param.Key, param.Value)))
 					return
 				}
-				if controllerParamsType[index] == reflect.Int {
-					arg = intId
-				}
+				arg = intId
+			} else if paramType == reflect.String {
+				arg = param.Value
 			} else {
+				// 默认按字符串处理
 				arg = param.Value
 			}
 			values = append(values, reflect.ValueOf(arg))
 		}
-		if argsNum > 1 && t.In(argsNum-1).Kind() == reflect.Pointer {
-			bodyStruct = reflect.New(t.In(1).Elem()).Interface()
+
+		// 处理请求体参数
+		if hasBodyParam {
+			bodyStruct := reflect.New(t.In(argsNum - 1).Elem()).Interface()
 			param, err := a.parseBodyToJsonStruct(c, bodyStruct)
 			if err != nil {
 				return
 			}
 			values = append(values, reflect.ValueOf(param))
 		}
-		values = f.Call(values) // 执行控制器函数
-		err := values[1].Interface()
+
+		// 执行控制器函数
+		results := f.Call(values)
+		err := results[1].Interface()
 		if err != nil {
 			errInterface := err.(error)
 			MakeErrorResponse(c, errInterface)
 			return
 		}
-		data := values[0].Interface()
+		data := results[0].Interface()
 		MakeSuccessResponse(c, data)
 	}
 }
@@ -135,29 +165,61 @@ func (a *App) validateController(controller any) error {
 	if t.Kind() != reflect.Func {
 		return errors.New(name + " controller must be func")
 	}
-	i := t.NumIn()
-	if i < 1 {
-		return errors.New(name + " controller must have at least one argument")
+
+	argCount := t.NumIn()
+	if argCount < 1 {
+		return errors.New(name + " controller must have at least one argument (gin.Context)")
 	}
-	if t.In(0).Kind() != reflect.Ptr {
-		return errors.New(name + " controller first argument must be gin context pointer")
+
+	// 第一个参数必须是 *gin.Context
+	if t.In(0) != reflect.TypeOf((*gin.Context)(nil)) {
+		return errors.New(name + " controller first argument must be *gin.Context")
 	}
-	if i > 1 && t.In(i-1).Kind() == reflect.Struct {
-		return errors.New(name + " controller last argument must be param pointer")
+
+	// 支持以下几种组合的路由
+	//  | /courses/:id                              | func(c *gin.Context, id string)                             | /courses/123                        |
+	//  | /courses/:id/students                     | func(c *gin.Context, id string, param *RequestStruct)       | /courses/123/students               |
+	//  | /courses/:courseId/students/:studentId    | func(c *gin.Context, courseId string, studentId string)     | /courses/123/students/456           |
+	//  | /api/:version/courses/:id/actions/:action | func(c *gin.Context, version string, id int, action string) | /api/v1/courses/123/actions/publish |
+	// 验证路径参数类型（第2个到倒数第2个或最后一个参数）
+	hasBodyParam := argCount > 1 && t.In(argCount-1).Kind() == reflect.Pointer
+	pathParamEnd := argCount
+	if hasBodyParam {
+		pathParamEnd = argCount - 1
 	}
+
+	// 验证路径参数类型，支持 string 和 int 类型
+	for i := 1; i < pathParamEnd; i++ {
+		paramType := t.In(i).Kind()
+		if paramType != reflect.String && paramType != reflect.Int {
+			return errors.New(fmt.Sprintf("%s controller path parameter %d must be string or int, got %s",
+				name, i, paramType.String()))
+		}
+	}
+
+	// 如果有请求体参数，验证最后一个参数必须是结构体指针
+	if hasBodyParam {
+		if t.In(argCount-1).Kind() != reflect.Pointer || t.In(argCount-1).Elem().Kind() != reflect.Struct {
+			return errors.New(name + " controller last argument must be struct pointer for request body")
+		}
+	}
+
 	// 校验 controller 出参定义
 	if t.NumOut() != 2 {
-		return errors.New(fmt.Sprintf("controller %s output args error", name))
+		return errors.New(fmt.Sprintf("controller %s must return exactly 2 values", name))
 	}
-	if t.Out(0).Kind() != reflect.Ptr {
-		return errors.New(fmt.Sprintf("controller %s output first arg not ptr", name))
+
+	// 第一个返回值必须是指针类型（响应结构体指针）
+	if t.Out(0).Kind() != reflect.Pointer {
+		return errors.New(fmt.Sprintf("controller %s first return value must be pointer", name))
 	}
-	if t.Out(1).Kind() != reflect.Interface {
-		return errors.New(fmt.Sprintf("controller %s output second arg not interface error", name))
+
+	// 第二个返回值必须是 error 接口
+	errorInterface := reflect.TypeOf((*error)(nil)).Elem()
+	if !t.Out(1).Implements(errorInterface) {
+		return errors.New(fmt.Sprintf("controller %s second return value must implement error interface", name))
 	}
-	if _, ok := reflect.New(t.Out(1)).Interface().(*error); !ok {
-		return errors.New(fmt.Sprintf("controller %s output second arg not error", name))
-	}
+
 	return nil
 }
 
@@ -170,7 +232,17 @@ func (a *App) parseUrlParams(c *gin.Context) []any {
 }
 
 func (a *App) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) {
-	if err := c.ShouldBindJSON(&reqStruct); err != nil {
+	var err error
+	// 根据请求方法决定绑定方式
+	if c.Request.Method == "GET" || c.Request.Method == "DELETE" {
+		// GET/DELETE 请求绑定查询参数
+		err = c.ShouldBind(&reqStruct)
+	} else {
+		// POST/PUT/PATCH 请求绑定 JSON 参数
+		err = c.ShouldBindJSON(&reqStruct)
+	}
+
+	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "EOF" {
 			errMsg = "empty json body"
