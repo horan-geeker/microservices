@@ -18,6 +18,7 @@ RUN cp -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     mkdir -p /binary
 
 COPY --from=build /execute /binary/execute
+COPY --from=build /.env /binary/.env
 
 EXPOSE 80
 
