@@ -14,6 +14,7 @@ var (
 type Factory interface {
 	Auth() Auth
 	User() User
+	System() System
 }
 
 type factory struct {
@@ -26,6 +27,10 @@ func (f *factory) Auth() Auth {
 
 func (f *factory) User() User {
 	return newUser(f.rdb)
+}
+
+func (f *factory) System() System {
+	return newSystem(f.rdb)
 }
 
 // NewFactory .

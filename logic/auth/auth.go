@@ -68,8 +68,23 @@ func (a *logic) Login(ctx context.Context, name, email, phone, password, smsCode
 	if err != nil {
 		return nil, "", err
 	}
+
+	// 检查账号是否被冻结
+	frozen, err := a.cache.System().IsAccountFrozen(ctx, user.ID)
+	if err != nil {
+		return nil, "", err
+	}
+	if frozen {
+		return nil, "", ecode.ErrAccountFrozen
+	}
+
 	if password != nil {
 		if !a.VerifyPassword(user.Password, *password) {
+			// 密码错误，记录失败次数
+			_, err := a.cache.System().HandleLoginFailure(ctx, user.ID)
+			if err != nil {
+				return nil, "", err
+			}
 			return nil, "", ecode.ErrInvalidPassword
 		}
 	}
@@ -95,6 +110,13 @@ func (a *logic) Login(ctx context.Context, name, email, phone, password, smsCode
 	}); err != nil {
 		return nil, "", err
 	}
+
+	// 登录成功，清除失败计数
+	if err := a.cache.System().ClearLoginFailure(ctx, user.ID); err != nil {
+		// 清除失败不影响登录成功，仅记录错误
+		// 可以在这里记录日志
+	}
+
 	return user, token, nil
 }
 

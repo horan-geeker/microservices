@@ -12,5 +12,5 @@ import (
 var (
 	env    = config.GetEnvConfig()
 	router = app.NewApp(app.NewServerOptions(env.AppEnv, env.ServerHost, env.ServerPort, env.ServerTimeout))
-	_      = router.Use(gzip.Gzip(gzip.DefaultCompression), middleware.RequestLogger, gin.Recovery())
+	_      = router.Use(gzip.Gzip(gzip.DefaultCompression), middleware.RequestLogger, middleware.ReqRateLimit(100, 1, false, false), gin.Recovery())
 )

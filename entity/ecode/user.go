@@ -14,6 +14,7 @@ var (
 	ErrUserNameAlreadyExist  = errors.New("用户名已存在")
 	ErrUserEmailAlreadyExist = errors.New("邮箱已存在")
 	ErrUserPhoneAlreadyExist = errors.New("手机号已存在")
+	ErrAccountFrozen         = errors.New("密码失败次数过多，账号已冻结，请两个小时后重试")
 )
 
 const (
@@ -25,6 +26,7 @@ const (
 	UserNameAlreadyExist
 	UserEmailAlreadyExist
 	UserPhoneAlreadyExist
+	AccountFrozen
 )
 
 func init() {
@@ -35,4 +37,5 @@ func init() {
 	errors2.Register(ErrUserNameAlreadyExist, UserNameAlreadyExist, http.StatusOK)
 	errors2.Register(ErrUserEmailAlreadyExist, UserEmailAlreadyExist, http.StatusOK)
 	errors2.Register(ErrUserPhoneAlreadyExist, UserPhoneAlreadyExist, http.StatusOK)
+	errors2.Register(ErrAccountFrozen, AccountFrozen, http.StatusForbidden)
 }
