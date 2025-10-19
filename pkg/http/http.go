@@ -33,7 +33,7 @@ type client struct {
 func NewClient(opts ...Option) Client {
 	c := &client{}
 	c.opts = make([]Option, 0, len(opts)+1)
-	c.opts = append(c.opts, WithProtocol("http"), WithJsonRequest(), WithJsonResponse(), WithTimeout(time.Second*5))
+	c.opts = append(c.opts, WithJsonRequest(), WithJsonResponse(), WithTimeout(time.Second*5))
 	c.opts = append(c.opts, opts...)
 	c.client = &http.Client{}
 	return c
@@ -80,6 +80,7 @@ func (c *client) Patch(ctx context.Context, path string, urlParams map[string]st
 	opts ...Option) error {
 	return c.send(ctx, path, http.MethodPatch, urlParams, reqBody, respBody, opts...)
 }
+
 func (c *client) send(ctx context.Context, path string, method string, urlParams map[string]string, reqBody any, respBody any, opts ...Option) error {
 	options, err := c.getOptions(opts)
 	if err != nil {
@@ -96,11 +97,13 @@ func (c *client) send(ctx context.Context, path string, method string, urlParams
 	var body io.Reader
 	if reqBody != nil {
 		if options.RequestHeader.Get(ContentType) == ContentTypeApplicationJson {
-			reqBody, err := json.Marshal(reqBody)
-			if err != nil {
+			buf := &bytes.Buffer{}
+			enc := json.NewEncoder(buf)
+			enc.SetEscapeHTML(false) // 关闭 &, <, > 自动转义
+			if err := enc.Encode(reqBody); err != nil {
 				return err
 			}
-			body = bytes.NewReader(reqBody)
+			body = bytes.NewReader(buf.Bytes())
 		} else if strings.Contains(options.RequestHeader.Get(ContentType), ContentTypeFormData) {
 			body = reqBody.(*bytes.Buffer)
 		}
@@ -118,13 +121,18 @@ func (c *client) send(ctx context.Context, path string, method string, urlParams
 			resp.Body.Close()
 			httpStatus = &resp.StatusCode
 		}
-		log.Info(ctx, "http-request", map[string]any{
+		logData := map[string]any{
 			"url":            fullUrl,
 			"reqBody":        reqBody,
 			"method":         method,
 			"responseStatus": httpStatus,
-			"responseBody":   responseReturn,
-		})
+		}
+		if options.ResponseHeader.Get(ContentType) == ContentTypeFormData {
+
+		} else {
+			logData["responseBody"] = responseReturn
+		}
+		log.Info(ctx, "http-request", logData)
 	}()
 	if err != nil {
 		return err
@@ -151,7 +159,17 @@ func (c *client) send(ctx context.Context, path string, method string, urlParams
 			return err
 		}
 	} else {
-		respBody = responseBody
+		// 处理 raw data 响应
+		if respBodyPtr, ok := respBody.(*[]byte); ok {
+			*respBodyPtr = responseBody
+		} else if respBodyPtr, ok := respBody.(*string); ok {
+			*respBodyPtr = string(responseBody)
+		} else {
+			// 尝试反射处理其他类型
+			if respBodyBytes, ok := respBody.(*[]byte); ok {
+				*respBodyBytes = responseBody
+			}
+		}
 	}
 	return nil
 }
