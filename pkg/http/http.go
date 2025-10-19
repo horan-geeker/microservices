@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/gocarina/gocsv"
 	"io"
 	"microservices/pkg/consts"
@@ -143,7 +142,7 @@ func (c *client) send(ctx context.Context, path string, method string, urlParams
 	//	return ecode.ErrHttpRequestError
 	//}
 	contentType := resp.Header.Get(ContentType)
-	if options.ResponseHeader.Get(contentType) == ContentTypeApplicationJson || contentType == ContentTypeApplicationJson {
+	if options.ResponseHeader.Get(ContentType) == ContentTypeApplicationJson || contentType == ContentTypeApplicationJson {
 		if err := json.Unmarshal(responseBody, respBody); err != nil {
 			return err
 		}
@@ -173,12 +172,6 @@ func (c *client) getOptions(opts []Option) (*Options, error) {
 	}
 	if err := options.parseURL(); err != nil {
 		return nil, err
-	}
-	if options.Protocol == "" {
-		return nil, errors.New("protocol is empty")
-	}
-	if options.Domain == "" && options.IP == "" {
-		return nil, errors.New("domain and ip is empty")
 	}
 	return options, nil
 }

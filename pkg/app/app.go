@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 	"io"
 	"microservices/entity"
-	errors2 "microservices/pkg/ecode"
+	"microservices/pkg/ecode"
 	"microservices/pkg/log"
 	"microservices/pkg/util"
 	"net/http"
@@ -106,7 +106,7 @@ func (a *App) wrapperGin(handle any) gin.HandlerFunc {
 
 		// 验证路径参数数量是否匹配
 		if actualPathParamCount != expectedPathParamCount {
-			MakeErrorResponse(c, errors2.Wrapper(errors2.ErrRouteParamInvalid,
+			MakeErrorResponse(c, ecode.ErrRouteParamInvalid.WithMessage(
 				fmt.Sprintf("路径参数数量不匹配: 期望 %d 个，实际 %d 个", expectedPathParamCount, actualPathParamCount)))
 			return
 		}
@@ -119,7 +119,7 @@ func (a *App) wrapperGin(handle any) gin.HandlerFunc {
 			if paramType == reflect.Int {
 				intId, err := strconv.Atoi(param.Value)
 				if err != nil {
-					MakeErrorResponse(c, errors2.Wrapper(errors2.ErrRouteParamInvalid,
+					MakeErrorResponse(c, ecode.ErrRouteParamInvalid.WithMessage(
 						fmt.Sprintf("路径参数 %s 无法转换为整数: %s", param.Key, param.Value)))
 					return
 				}
@@ -236,10 +236,10 @@ func (a *App) parseBodyToJsonStruct(c *gin.Context, reqStruct any) (any, error) 
 	// 根据请求方法决定绑定方式
 	if c.Request.Method == "GET" || c.Request.Method == "DELETE" {
 		// GET/DELETE 请求绑定查询参数
-		err = c.ShouldBind(&reqStruct)
+		err = c.ShouldBind(reqStruct)
 	} else {
 		// POST/PUT/PATCH 请求绑定 JSON 参数
-		err = c.ShouldBindJSON(&reqStruct)
+		err = c.ShouldBind(reqStruct)
 	}
 
 	if err != nil {
@@ -276,17 +276,16 @@ func MakeSuccessResponse(c *gin.Context, data any) {
 func MakeErrorResponse(c *gin.Context, err error) {
 	traceId, _ := c.Request.Context().Value("traceId").(string)
 	spanId, _ := c.Request.Context().Value("spanId").(string)
-	code := errors2.InternalServerErrorCode
+	code := ecode.InternalServerErrorCode
 	var message string
 	httpStatus := http.StatusInternalServerError
-	for _, e := range errors2.GetCollectErr() {
-		if errors.Is(err, e) {
-			code = errors2.GetErrCodeByErr(e)
-			httpStatus = errors2.GetHttpStatusByErr(e)
-		}
-	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		code = errors2.DataNotFound
+	var e *ecode.CustomError
+	if errors.As(err, &e) {
+		code = e.Code
+		message = e.Message
+		httpStatus = e.HttpStatus
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		code = ecode.DataNotFound
 		message = "数据不存在"
 		httpStatus = http.StatusNotFound
 	} else {

@@ -5,43 +5,51 @@ import (
 	"net/http"
 )
 
-var errMapErrCode = make(map[error]int)
-var errMapHttpStatus = make(map[error]int)
-var errCollect []error
-
-// Register .
-func Register(err error, errCode int, httpStatus int) {
-	errCollect = append(errCollect, err)
-	errMapErrCode[err] = errCode
-	errMapHttpStatus[err] = httpStatus
+// CustomError 自定义错误类型，支持链式调用
+type CustomError struct {
+	Message    string
+	Code       int
+	HttpStatus int
 }
 
-// GetCollectErr .
-func GetCollectErr() []error {
-	return errCollect
+// Error 实现error接口
+func (e *CustomError) Error() string {
+	return e.Message
 }
 
-// GetErrCodeByErr .
-func GetErrCodeByErr(err error) int {
-	if code, ok := errMapErrCode[err]; ok {
-		return code
+// WithMessage 返回带有自定义消息的错误
+func (e *CustomError) WithMessage(msg string) error {
+	return &CustomError{
+		Code:       e.Code,
+		Message:    msg,
+		HttpStatus: e.HttpStatus,
 	}
-	return InternalServerErrorCode
 }
 
-// GetHttpStatusByErr .
-func GetHttpStatusByErr(err error) int {
-	if status, ok := errMapHttpStatus[err]; ok {
-		return status
+// GetCode 获取错误码
+func (e *CustomError) GetCode() int {
+	return e.Code
+}
+
+// GetHttpStatus 获取HTTP状态码
+func (e *CustomError) GetHttpStatus() int {
+	return e.HttpStatus
+}
+
+// Is 实现 errors.Is 接口，基于错误码进行比较
+func (e *CustomError) Is(target error) bool {
+	var targetErr *CustomError
+	if errors.As(target, &targetErr) {
+		return e.Code == targetErr.Code
 	}
-	return http.StatusInternalServerError
+	return false
 }
 
 var (
-	ErrInternalServerError = errors.New("系统内部错误")
-	ErrDataNotFound        = errors.New("数据不存在")
-	ErrRouteParamInvalid   = errors.New("URL路由参数无效")
-	ErrUserAuthFail        = errors.New("用户登录态校验失败")
+	ErrInternalServerError = &CustomError{Code: InternalServerErrorCode, Message: "系统内部错误", HttpStatus: http.StatusInternalServerError}
+	ErrDataNotFound        = &CustomError{Code: DataNotFound, Message: "数据不存在", HttpStatus: http.StatusNotFound}
+	ErrRouteParamInvalid   = &CustomError{Code: RouteParamInvalid, Message: "URL路由参数无效", HttpStatus: http.StatusBadRequest}
+	ErrUserAuthFail        = &CustomError{Code: UserAuthFail, Message: "用户登录态校验失败", HttpStatus: http.StatusUnauthorized}
 )
 
 const (
@@ -51,17 +59,3 @@ const (
 	RouteParamInvalid
 	UserAuthFail
 )
-
-func init() {
-	Register(ErrInternalServerError, InternalServerErrorCode, http.StatusInternalServerError)
-	Register(ErrDataNotFound, DataNotFound, http.StatusNotFound)
-	Register(ErrRouteParamInvalid, RouteParamInvalid, http.StatusBadRequest)
-	Register(ErrUserAuthFail, UserAuthFail, http.StatusUnauthorized)
-}
-
-func Wrapper(err error, msg string) error {
-	eMsg := err.Error()
-	newErr := errors.New(eMsg + msg)
-	Register(newErr, GetErrCodeByErr(err), GetHttpStatusByErr(err))
-	return newErr
-}

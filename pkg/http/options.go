@@ -33,7 +33,10 @@ func (o *Options) getBaseUrl() string {
 	if target == "" {
 		target = o.IP
 	}
-	baseUrl := fmt.Sprintf("%s://%s", o.Protocol, target)
+	var baseUrl string
+	if target != "" {
+		baseUrl = fmt.Sprintf("%s://%s", o.Protocol, target)
+	}
 	if o.Port != 0 {
 		return fmt.Sprintf("%s:%d", baseUrl, o.Port)
 	}
@@ -52,11 +55,11 @@ func (o *Options) parseURL() error {
 		o.Protocol = parsedUrl.Scheme // 协议
 		if strings.Contains(parsedUrl.Host, ":") {
 			parts := strings.Split(parsedUrl.Host, ":")
-			o.Domain = parts[0] // 域名
-		}
-		o.Port, err = strconv.Atoi(parsedUrl.Port()) // 端口，如果未指定则返回空字符串
-		if err != nil {
-			return err
+			o.Domain = parts[0]                          // 域名
+			o.Port, err = strconv.Atoi(parsedUrl.Port()) // 端口，如果未指定则返回空字符串
+			if err != nil {
+				return err
+			}
 		}
 		o.PrefixUri = parsedUrl.Path // 路径
 	}

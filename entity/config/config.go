@@ -26,6 +26,9 @@ type Config struct {
 
 	TencentMailServerAddress  string `mapstructure:"TENCENT_MAIL_SERVER_ADDRESS" json:"tencent_mail_server_address"`
 	TencentMailServerPassword string `mapstructure:"TENCENT_MAIL_SERVER_PASSWORD" json:"tencent_mail_server_password"`
+	COSBucketDomain           string `mapstructure:"COS_BUCKET_DOMAIN" json:"cos_bucket_domain"`
+	COSSecretId               string `mapstructure:"COS_SECRET_ID" json:"cos_secret_id"`
+	COSSecretKey              string `mapstructure:"COS_SECRET_KEY" json:"cos_secret_key"`
 
 	AliyunAccessKeyId     string `mapstructure:"ALIYUN_ACCESS_KEY_ID" json:"aliyun_access_key_id"`
 	AliyunAccessKeySecret string `mapstructure:"ALIYUN_ACCESS_KEY_SECRET" json:"aliyun_access_key_secret"`
