@@ -69,15 +69,21 @@ jobs:
       # 2、设置 gcloud
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
+        with:
+          export_default_credentials: true
 
-      # 3、获取 GKE 凭证
+      # 3、安装插件
+      - name: Install gke-gcloud-auth-plugin
+        run: gcloud components install gke-gcloud-auth-plugin
+
+      # 4、获取 GKE 凭证
       - name: Get GKE credentials
         run: |
           gcloud container clusters get-credentials ${GKE_CLUSTER_ID} \
             --region ${GKE_REGION} \
             --project ${GCP_PROJECT_ID}
 
-      # 4、部署到 GKE
+      # 5、部署到 GKE
       - name: Deploy
         run: |
           kubectl set image deployment/${DEPLOYMENT_NAME} \
