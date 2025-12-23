@@ -1,4 +1,4 @@
-package auth
+package controller
 
 import (
 	"github.com/gin-gonic/gin"
@@ -11,7 +11,7 @@ import (
 	"microservices/service"
 )
 
-type Controller interface {
+type AuthController interface {
 	ChangePassword(c *gin.Context, param *request.ChangePassword) (*response.ChangePassword, error)
 	ChangePasswordByPhone(c *gin.Context, param *request.ChangePasswordByPhone) (*response.ChangePasswordByPhone, error)
 	Login(c *gin.Context, params *request.Login) (*response.Login, error)
@@ -19,7 +19,7 @@ type Controller interface {
 	Register(c *gin.Context, params *request.Register) (*response.Register, error)
 }
 
-type controller struct {
+type authController struct {
 	logic logic.Factory
 }
 
@@ -33,7 +33,7 @@ type controller struct {
 // @Success 200 {object} entity.Response[response.ChangePassword]
 // @Failure 400 {object} entity.Response[any]
 // @Router /auth/change-password [post]
-func (a *controller) ChangePassword(c *gin.Context, param *request.ChangePassword) (*response.ChangePassword, error) {
+func (a *authController) ChangePassword(c *gin.Context, param *request.ChangePassword) (*response.ChangePassword, error) {
 	auth, err := a.logic.Auth().GetAuthUser(c.Request.Context())
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (a *controller) ChangePassword(c *gin.Context, param *request.ChangePasswor
 	return nil, nil
 }
 
-func (a *controller) ChangePasswordByPhone(c *gin.Context, param *request.ChangePasswordByPhone) (*response.ChangePasswordByPhone, error) {
+func (a *authController) ChangePasswordByPhone(c *gin.Context, param *request.ChangePasswordByPhone) (*response.ChangePasswordByPhone, error) {
 	if err := a.logic.Auth().ChangePasswordByPhone(c.Request.Context(), param.NewPassword, param.Phone, param.SmsCode); err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (a *controller) ChangePasswordByPhone(c *gin.Context, param *request.Change
 }
 
 // Login .
-func (a *controller) Login(c *gin.Context, params *request.Login) (*response.Login, error) {
+func (a *authController) Login(c *gin.Context, params *request.Login) (*response.Login, error) {
 	user, token, err := a.logic.Auth().Login(c.Request.Context(), params.Name, params.Email, params.Phone, params.Password,
 		params.SmsCode, params.EmailCode)
 	if err != nil {
@@ -70,7 +70,7 @@ func (a *controller) Login(c *gin.Context, params *request.Login) (*response.Log
 }
 
 // Logout .
-func (a *controller) Logout(c *gin.Context) (*response.Logout, error) {
+func (a *authController) Logout(c *gin.Context) (*response.Logout, error) {
 	auth, err := a.logic.Auth().GetAuthUser(c.Request.Context())
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (a *controller) Logout(c *gin.Context) (*response.Logout, error) {
 }
 
 // Register .
-func (a *controller) Register(c *gin.Context, params *request.Register) (*response.Register, error) {
+func (a *authController) Register(c *gin.Context, params *request.Register) (*response.Register, error) {
 	user, token, err := a.logic.Auth().Register(c.Request.Context(), params.Name, params.Email, params.Phone, params.Password)
 	if err != nil {
 		return nil, err
@@ -93,8 +93,8 @@ func (a *controller) Register(c *gin.Context, params *request.Register) (*respon
 	}, nil
 }
 
-func NewController(model model.Factory, cache cache.Factory, service service.Factory) Controller {
-	return &controller{
+func NewAuthController(model model.Factory, cache cache.Factory, service service.Factory) AuthController {
+	return &authController{
 		logic: logic.NewLogic(model, cache, service),
 	}
 }

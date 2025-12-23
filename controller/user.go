@@ -1,4 +1,4 @@
-package user
+package controller
 
 import (
 	"github.com/gin-gonic/gin"
@@ -12,12 +12,12 @@ import (
 	"microservices/service"
 )
 
-type Controller interface {
+type UserController interface {
 	Edit(c *gin.Context, param *request.EditUserParam) (*response.EditUser, error)
 	Get(c *gin.Context, uid int) (*response.GetUser, error)
 }
 
-type controller struct {
+type userController struct {
 	logic logic.Factory
 }
 
@@ -31,7 +31,7 @@ type controller struct {
 // @Success 200 {object} entity.Response[response.EditUser]
 // @Failure 401 {object} entity.Response[any] "用户登录态校验失败(code: 4)"
 // @Router /users/{id}/edit [post]
-func (u *controller) Edit(c *gin.Context, param *request.EditUserParam) (*response.EditUser, error) {
+func (u *userController) Edit(c *gin.Context, param *request.EditUserParam) (*response.EditUser, error) {
 	token := c.GetHeader("Authorization")
 	if len(token) == 0 {
 		return nil, ecode.ErrTokenIsEmpty
@@ -57,7 +57,7 @@ func (u *controller) Edit(c *gin.Context, param *request.EditUserParam) (*respon
 // @Success 200 {object} entity.Response[response.GetUser]
 // @Failure 400 {object} entity.Response[any]
 // @Router /users/{id} [get]
-func (u *controller) Get(c *gin.Context, uid int) (*response.GetUser, error) {
+func (u *userController) Get(c *gin.Context, uid int) (*response.GetUser, error) {
 	userinfo, err := u.logic.User().GetByUid(c.Request.Context(), uid)
 	if err != nil {
 		return nil, err
@@ -67,9 +67,9 @@ func (u *controller) Get(c *gin.Context, uid int) (*response.GetUser, error) {
 	}, nil
 }
 
-// NewController .
-func NewController(model model.Factory, cache cache.Factory, service service.Factory) Controller {
-	return &controller{
+// NewUserController .
+func NewUserController(model model.Factory, cache cache.Factory, service service.Factory) UserController {
+	return &userController{
 		logic: logic.NewLogic(model, cache, service),
 	}
 }

@@ -1,41 +1,43 @@
 package controller
 
 import (
-	"microservices/entity/ecode"
+	"microservices/entity/request"
+	"microservices/entity/response"
 	"microservices/logic"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-type CallbackController struct {
+type CallbackController interface {
+	GoogleAuthCallback(ctx *gin.Context, param *request.GoogleCallbackParam) (*response.GoogleCallback, error)
+}
+
+type callbackController struct {
 	logic logic.Factory
 }
 
-func NewCallbackController(l logic.Factory) *CallbackController {
-	return &CallbackController{logic: l}
+func NewCallbackController(l logic.Factory) CallbackController {
+	return &callbackController{logic: l}
 }
 
 // GoogleAuthCallback handles the Google OAuth callback.
-func (c *CallbackController) GoogleAuthCallback(ctx *gin.Context) {
-	code := ctx.Query("code")
-	if code == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"code": ecode.ErrParamInvalid.Code, "msg": "code is required", "data": nil})
-		return
-	}
-
-	user, token, err := c.logic.Callback().GoogleCallback(ctx, code)
+// @Summary Google OAuth Callback
+// @Description Handle Google OAuth callback code
+// @Tags callback
+// @Accept  json
+// @Produce  json
+// @Param code query string true "OAuth Code"
+// @Success 200 {object} entity.Response[response.GoogleCallback]
+// @Failure 400 {object} entity.Response[any]
+// @Router /callback/google-auth [get]
+func (c *callbackController) GoogleAuthCallback(ctx *gin.Context, param *request.GoogleCallbackParam) (*response.GoogleCallback, error) {
+	user, token, err := c.logic.Callback().GoogleCallback(ctx, param.Code)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"code": http.StatusInternalServerError, "msg": err.Error(), "data": nil})
-		return
+		return nil, err
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"msg":  "success",
-		"data": gin.H{
-			"user":  user,
-			"token": token,
-		},
-	})
+	return &response.GoogleCallback{
+		User:  user,
+		Token: token,
+	}, nil
 }

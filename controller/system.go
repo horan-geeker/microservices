@@ -1,4 +1,4 @@
-package system
+package controller
 
 import (
 	"github.com/gin-gonic/gin"
@@ -9,23 +9,23 @@ import (
 	"microservices/service"
 )
 
-type Controller interface {
+type SystemController interface {
 	Health(c *gin.Context) (*response.Health, error)
 }
 
-type controller struct {
+type systemController struct {
 	logic logic.Factory
 }
 
 // Health .
-func (s *controller) Health(c *gin.Context) (*response.Health, error) {
+func (s *systemController) Health(c *gin.Context) (*response.Health, error) {
 	return &response.Health{
 		Status: "ok",
 	}, nil
 }
 
-func NewController(model model.Factory, cache cache.Factory, service service.Factory) Controller {
-	return &controller{
+func NewSystemController(model model.Factory, cache cache.Factory, service service.Factory) SystemController {
+	return &systemController{
 		logic: logic.NewLogic(model, cache, service),
 	}
 }

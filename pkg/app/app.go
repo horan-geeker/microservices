@@ -58,7 +58,7 @@ func (a *App) Handle(httpMethod, relativePath string, customHandlers ...any) gin
 	for _, handler := range customHandlers {
 		var ginHandlerFunc gin.HandlerFunc
 		name := util.GetFunctionName(handler)
-		if strings.Contains(name, "/controller/") {
+		if strings.Contains(name, "/controller.") {
 			if err := a.validateController(handler); err != nil {
 				panic(err)
 			}
@@ -67,6 +67,9 @@ func (a *App) Handle(httpMethod, relativePath string, customHandlers ...any) gin
 			var ok bool
 			ginHandlerFunc, ok = handler.(gin.HandlerFunc)
 			if !ok {
+				log.Error(context.Background(), "system-error", nil, map[string]any{
+					"function": name,
+				})
 				panic(ok)
 			}
 		}

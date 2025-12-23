@@ -1,4 +1,4 @@
-package notify
+package controller
 
 import (
 	"github.com/gin-gonic/gin"
@@ -9,29 +9,29 @@ import (
 	"microservices/service"
 )
 
-type Controller interface {
+type NotifyController interface {
 	SendSms(c *gin.Context) (*response.SendSms, error)
 	SendEmail(c *gin.Context) (*response.SendEmail, error)
 }
 
-type controller struct {
+type notifyController struct {
 	logic logic.Factory
 }
 
-func (n *controller) SendSms(c *gin.Context) (*response.SendSms, error) {
+func (n *notifyController) SendSms(c *gin.Context) (*response.SendSms, error) {
 	if err := n.logic.Notify().SendSmsCode(c.Request.Context(), "13571899655", "1234"); err != nil {
 		return nil, err
 	}
 	return nil, nil
 }
 
-func (n *controller) SendEmail(c *gin.Context) (*response.SendEmail, error) {
+func (n *notifyController) SendEmail(c *gin.Context) (*response.SendEmail, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func NewController(model model.Factory, cache cache.Factory, service service.Factory) Controller {
-	return &controller{
+func NewNotifyController(model model.Factory, cache cache.Factory, service service.Factory) NotifyController {
+	return &notifyController{
 		logic: logic.NewLogic(model, cache, service),
 	}
 }
