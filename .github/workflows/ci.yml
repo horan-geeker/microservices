@@ -7,8 +7,8 @@ on:
 #    branches: [ master ]
 
 env:
+  IMAGE_NAME: microservices
   TKE_DOCKER_HUB: ccr.ccs.tencentyun.com
-  TKE_IMAGE_URL: ccr.ccs.tencentyun.com/hejunwei/microservices
   TKE_REGION: ap-chengdu
   TKE_CLUSTER_ID: cls-kj6srqvx
   DEPLOYMENT_NAME: microservice
@@ -19,7 +19,6 @@ env:
   GCP_PROJECT_ID: gen-lang-client-0465524346
   GKE_REGION: us-central1
   GKE_DOCKER_HUB: us-central1-docker.pkg.dev
-  GKE_IMAGE_URL: microservices/microservices
   GKE_CLUSTER_ID: autopilot-cluster-1
 
 jobs:
@@ -43,7 +42,7 @@ jobs:
 
       # build docker image
       - name: Build the Docker image
-        run: docker build -t ${TKE_IMAGE_URL}:${{steps.meta.outputs.tag}} .
+        run: docker build -t ${IMAGE_NAME}:${{steps.meta.outputs.tag}} .
   pushTKE:
     needs: build
     runs-on: ubuntu-latest
@@ -52,7 +51,7 @@ jobs:
       - name: Login TKE Registry
         run: docker login ${TKE_DOCKER_HUB} --username="${{secrets.TENCENT_CLOUD_ACCOUNT_ID}}" -p "${{ secrets.TKE_REGISTRY_PASSWORD }}"
       - name: Publish
-        run: docker push ${TKE_IMAGE_URL}:${{needs.build.outputs.image_tag}}
+        run: docker push ${TKE_DOCKER_HUB}/hejunwei/${IMAGE_NAME}:${{needs.build.outputs.image_tag}}
 
       # deploy k8s
       - name: Set up ~/.kube/config for connecting TKE cluster
@@ -83,20 +82,20 @@ jobs:
 
       # 4、构建并推送镜像
       - name: Build and Push Docker Image
-        run: docker push ${GKE_DOCKER_HUB}/${GKE_PROJECT_ID}/app/${GKE_IMAGE_URL}:${{needs.build.outputs.image_tag}}
+        run: docker push ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{needs.build.outputs.image_tag}}
 
       # 5、获取 GKE 凭证
       - name: Get GKE credentials
         run: |
           gcloud container clusters get-credentials ${GKE_CLUSTER_ID} \
             --region ${GKE_REGION} \
-            --project ${GKE_PROJECT_ID}
+            --project ${GCP_PROJECT_ID}
 
       # 6、部署到 GKE
       - name: Deploy
         run: |
           kubectl set image deployment/${DEPLOYMENT_NAME} \
-            ${CONTAINER_NAME}=${GKE_DOCKER_HUB}/${GKE_PROJECT_ID}/app/${GKE_IMAGE_URL}:${{needs.build.outputs.image_tag}}
+            ${CONTAINER_NAME}=${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{needs.build.outputs.image_tag}}
 
   deploy-docs:
     runs-on: ubuntu-latest
