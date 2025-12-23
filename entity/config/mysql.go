@@ -14,7 +14,7 @@ func NewMysqlOptions() *mysql.Options {
 		Port:                  env.DBPort,
 		Username:              env.DBUsername,
 		Password:              env.DBPassword,
-		Database:              "microservice",
+		Database:              env.DBName,
 		MaxIdleConnections:    100,
 		MaxOpenConnections:    100,
 		MaxConnectionLifeTime: time.Duration(10) * time.Second,
