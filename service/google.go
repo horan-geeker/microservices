@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"google.golang.org/genai"
 	"io"
 	"microservices/entity/config"
 	entity "microservices/entity/model"
@@ -13,10 +12,21 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/oauth2"
+	google_oauth2 "golang.org/x/oauth2/google"
+	oauth2_v2 "google.golang.org/api/oauth2/v2"
+	"google.golang.org/api/option"
+	"google.golang.org/genai"
 )
 
 type Google interface {
+	// ChatWithGemini generates content using Google's Gemini model.
 	ChatWithGemini(ctx context.Context, apiKey string, prompt string, images []*entity.Image) (*genai.GenerateContentResponse, error)
+	// ExchangeCodeForToken exchanges the authorization code for an OAuth2 token.
+	ExchangeCodeForToken(ctx context.Context, code string) (*oauth2.Token, error)
+	// GetUserInfo retrieves the user information from Google using the access token.
+	GetUserInfo(ctx context.Context, tokenSource oauth2.TokenSource) (*oauth2_v2.Userinfo, error)
 }
 
 type google struct {
@@ -145,4 +155,42 @@ func (g *google) ChatWithGemini(ctx context.Context, apiKey string, prompt strin
 	}
 
 	return response, nil
+}
+
+// ExchangeCodeForToken exchanges the authorization code for an OAuth2 token.
+func (g *google) ExchangeCodeForToken(ctx context.Context, code string) (*oauth2.Token, error) {
+	env := config.GetEnvConfig()
+	conf := &oauth2.Config{
+		ClientID:     env.GoogleClientId,
+		ClientSecret: env.GoogleClientSecret,
+		RedirectURL:  env.GoogleRedirectURL,
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google_oauth2.Endpoint,
+	}
+
+	// 使用自定义transport
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{
+		Transport: NewGoogleTransport(g.opts.ProxyURL),
+		Timeout:   60 * time.Second,
+	})
+
+	return conf.Exchange(ctx, code)
+}
+
+// GetUserInfo retrieves the user information from Google using the access token.
+func (g *google) GetUserInfo(ctx context.Context, tokenSource oauth2.TokenSource) (*oauth2_v2.Userinfo, error) {
+	httpClient := &http.Client{
+		Transport: NewGoogleTransport(g.opts.ProxyURL),
+		Timeout:   60 * time.Second,
+	}
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
+
+	service, err := oauth2_v2.NewService(ctx, option.WithTokenSource(tokenSource), option.WithHTTPClient(httpClient))
+	if err != nil {
+		return nil, err
+	}
+	return service.Userinfo.Get().Do()
 }

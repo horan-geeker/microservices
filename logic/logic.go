@@ -3,6 +3,7 @@ package logic
 import (
 	"microservices/cache"
 	"microservices/logic/auth"
+	"microservices/logic/callback"
 	"microservices/logic/notify"
 	"microservices/logic/user"
 	"microservices/model"
@@ -13,6 +14,7 @@ import (
 type Factory interface {
 	User() user.Logic
 	Auth() auth.Logic
+	Callback() callback.Logic
 	Notify() notify.Logic
 }
 
@@ -32,6 +34,10 @@ func (l *factory) User() user.Logic {
 
 func (l *factory) Auth() auth.Logic {
 	return auth.NewAuth(l.model, l.cache, l.service)
+}
+
+func (l *factory) Callback() callback.Logic {
+	return callback.NewCallback(l.model, l.cache, l.service)
 }
 
 // NewLogic .

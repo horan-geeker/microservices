@@ -16,11 +16,17 @@ env:
   COS_BUCKET: swagger-1251473386
   COS_REGION: ap-beijing
   SWAGGER_REMOTE_PATH: microservice/swagger.json
+  GCP_PROJECT_ID: gen-lang-client-0465524346
+  GKE_REGION: us-central1
+  GKE_DOCKER_HUB: us-central1-docker.pkg.dev
+  GKE_IMAGE_URL: microservices/microservices
+  GKE_CLUSTER_ID: autopilot-cluster-1
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
+    outputs:
+        image_tag: ${{ steps.meta.outputs.tag }}
     steps:
       - uses: actions/checkout@v2
 
@@ -32,18 +38,21 @@ jobs:
           -e 's/DB_PASSWORD=/DB_PASSWORD=${{secrets.DB_PASSWORD}}/' .env.example > .env
 
       - name: Export Date Env
-        id: CURRENT_DATE
-        run: echo "::set-output name=date::$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M-%S')"
+        id: meta
+        run: echo "tag=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
 
       # build docker image
       - name: Build the Docker image
-        run: docker build -t ${TKE_IMAGE_URL}:${{steps.CURRENT_DATE.outputs.date}} .
-      
+        run: docker build -t ${TKE_IMAGE_URL}:${{steps.meta.outputs.tag}} .
+  pushTKE:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       # Push the Docker image to TKE Registry
       - name: Login TKE Registry
         run: docker login ${TKE_DOCKER_HUB} --username="${{secrets.TENCENT_CLOUD_ACCOUNT_ID}}" -p "${{ secrets.TKE_REGISTRY_PASSWORD }}"
       - name: Publish
-        run: docker push ${TKE_IMAGE_URL}:${{steps.CURRENT_DATE.outputs.date}}
+        run: docker push ${TKE_IMAGE_URL}:${{steps.meta.outputs.tag}}
 
       # deploy k8s
       - name: Set up ~/.kube/config for connecting TKE cluster
@@ -53,15 +62,44 @@ jobs:
           secret_key: ${{ secrets.TENCENT_CLOUD_SECRET_KEY }}
           tke_region: ${{ env.TKE_REGION }}
           cluster_id: ${{ env.TKE_CLUSTER_ID }}
-  
-      - name: Switch to TKE context
+  pushGKE:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # 1、认证 GCP
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+      
+      # 2、设置 gcloud
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      # 3、配置 Docker 认证
+      - name: Configure Docker
         run: |
-          kubectl config use-context ${TKE_CLUSTER_ID}-context-default
-  
-      # Deploy the Docker image to the TKE cluster 由于腾讯云内外网访问集群需要购买 clb 所以无法使用 kubctl 在外网操作集群
-      # - name: Deploy to TKE
-      #   run: |
-      #     kubectl set image deployment/${DEPLOYMENT_NAME} ${CONTAINER_NAME}=${TKE_IMAGE_URL}:${{steps.CURRENT_DATE.outputs.date}} --record
+          gcloud auth configure-docker $GKE_DOCKER_HUB
+
+      # 4、构建并推送镜像
+      - name: Build and Push Docker Image
+        run: docker push $GKE_DOCKER_HUB/$GKE_PROJECT_ID/app/$GKE_IMAGE_URL:${{steps.meta.outputs.tag}}
+
+      # 5、获取 GKE 凭证
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials $GKE_CLUSTER_ID \
+            --region $GKE_REGION \
+            --project $GKE_PROJECT_ID
+
+      # 6、部署到 GKE
+      - name: Deploy
+        run: |
+          kubectl set image deployment/$DEPLOYMENT_NAME \
+            $CONTAINER_NAME=$GKE_DOCKER_HUB/$GKE_PROJECT_ID/app/$GKE_IMAGE_URL:${{steps.meta.outputs.tag}}
 
   deploy-docs:
     runs-on: ubuntu-latest

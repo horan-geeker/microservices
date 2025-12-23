@@ -1,9 +1,10 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"microservices/entity/config"
 	"microservices/pkg/mysql"
+
+	"gorm.io/gorm"
 )
 
 // 实例化
@@ -15,6 +16,7 @@ var (
 // Factory .
 type Factory interface {
 	User() User
+	Authorize() Authorize
 }
 
 // 定义 factory
@@ -25,6 +27,11 @@ type factory struct {
 // User .
 func (s *factory) User() User {
 	return newUser(s)
+}
+
+// Authorize .
+func (s *factory) Authorize() Authorize {
+	return newAuthorize(s)
 }
 
 // NewFactory .

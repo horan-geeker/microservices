@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/mitchellh/mapstructure"
 	"microservices/pkg/config"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 // Config 环境变量映射结构体
@@ -29,6 +30,10 @@ type Config struct {
 	COSBucketDomain           string `mapstructure:"COS_BUCKET_DOMAIN" json:"cos_bucket_domain"`
 	COSSecretId               string `mapstructure:"COS_SECRET_ID" json:"cos_secret_id"`
 	COSSecretKey              string `mapstructure:"COS_SECRET_KEY" json:"cos_secret_key"`
+
+	GoogleClientId     string `mapstructure:"GOOGLE_CLIENT_ID" json:"google_client_id"`
+	GoogleClientSecret string `mapstructure:"GOOGLE_CLIENT_SECRET" json:"google_client_secret"`
+	GoogleRedirectURL  string `mapstructure:"GOOGLE_REDIRECT_URL" json:"google_redirect_url"`
 
 	AliyunAccessKeyId     string `mapstructure:"ALIYUN_ACCESS_KEY_ID" json:"aliyun_access_key_id"`
 	AliyunAccessKeySecret string `mapstructure:"ALIYUN_ACCESS_KEY_SECRET" json:"aliyun_access_key_secret"`
