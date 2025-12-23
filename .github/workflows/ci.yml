@@ -52,7 +52,7 @@ jobs:
       - name: Login TKE Registry
         run: docker login ${TKE_DOCKER_HUB} --username="${{secrets.TENCENT_CLOUD_ACCOUNT_ID}}" -p "${{ secrets.TKE_REGISTRY_PASSWORD }}"
       - name: Publish
-        run: docker push ${TKE_IMAGE_URL}:${{steps.meta.outputs.tag}}
+        run: docker push ${TKE_IMAGE_URL}:${{needs.build.outputs.image_tag}}
 
       # deploy k8s
       - name: Set up ~/.kube/config for connecting TKE cluster
@@ -72,9 +72,6 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
       
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-      
       # 2、设置 gcloud
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
@@ -82,24 +79,24 @@ jobs:
       # 3、配置 Docker 认证
       - name: Configure Docker
         run: |
-          gcloud auth configure-docker $GKE_DOCKER_HUB
+          gcloud auth configure-docker ${GKE_DOCKER_HUB}
 
       # 4、构建并推送镜像
       - name: Build and Push Docker Image
-        run: docker push $GKE_DOCKER_HUB/$GKE_PROJECT_ID/app/$GKE_IMAGE_URL:${{steps.meta.outputs.tag}}
+        run: docker push ${GKE_DOCKER_HUB}/${GKE_PROJECT_ID}/app/${GKE_IMAGE_URL}:${{needs.build.outputs.image_tag}}
 
       # 5、获取 GKE 凭证
       - name: Get GKE credentials
         run: |
-          gcloud container clusters get-credentials $GKE_CLUSTER_ID \
-            --region $GKE_REGION \
-            --project $GKE_PROJECT_ID
+          gcloud container clusters get-credentials ${GKE_CLUSTER_ID} \
+            --region ${GKE_REGION} \
+            --project ${GKE_PROJECT_ID}
 
       # 6、部署到 GKE
       - name: Deploy
         run: |
-          kubectl set image deployment/$DEPLOYMENT_NAME \
-            $CONTAINER_NAME=$GKE_DOCKER_HUB/$GKE_PROJECT_ID/app/$GKE_IMAGE_URL:${{steps.meta.outputs.tag}}
+          kubectl set image deployment/${DEPLOYMENT_NAME} \
+            ${CONTAINER_NAME}=${GKE_DOCKER_HUB}/${GKE_PROJECT_ID}/app/${GKE_IMAGE_URL}:${{needs.build.outputs.image_tag}}
 
   deploy-docs:
     runs-on: ubuntu-latest
