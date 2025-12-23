@@ -8,10 +8,13 @@ on:
 
 env:
   IMAGE_NAME: microservices
+  REPO_NAME: repo
   GCP_PROJECT_ID: gen-lang-client-0465524346
   GKE_REGION: us-central1
   GKE_DOCKER_HUB: us-central1-docker.pkg.dev
   GKE_CLUSTER_ID: autopilot-cluster-1
+  DEPLOYMENT_NAME: microservice
+  CONTAINER_NAME: container
 
 jobs:
   build-push:
@@ -50,8 +53,8 @@ jobs:
       # 4、构建并推送镜像
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{steps.meta.outputs.tag}} .
-          docker push ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{steps.meta.outputs.tag}}
+          docker build -t ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${{steps.meta.outputs.tag}} .
+          docker push ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${{steps.meta.outputs.tag}}
 
   deploy:
     needs: build-push
@@ -78,4 +81,4 @@ jobs:
       - name: Deploy
         run: |
           kubectl set image deployment/${DEPLOYMENT_NAME} \
-            ${CONTAINER_NAME}=${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{needs.build-push.outputs.image_tag}}
+            ${CONTAINER_NAME}=${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${{needs.build-push.outputs.image_tag}}
