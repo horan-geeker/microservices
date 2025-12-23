@@ -8,21 +8,13 @@ on:
 
 env:
   IMAGE_NAME: microservices
-  TKE_DOCKER_HUB: ccr.ccs.tencentyun.com
-  TKE_REGION: ap-chengdu
-  TKE_CLUSTER_ID: cls-kj6srqvx
-  DEPLOYMENT_NAME: microservice
-  CONTAINER_NAME: container
-  COS_BUCKET: swagger-1251473386
-  COS_REGION: ap-beijing
-  SWAGGER_REMOTE_PATH: microservice/swagger.json
   GCP_PROJECT_ID: gen-lang-client-0465524346
   GKE_REGION: us-central1
   GKE_DOCKER_HUB: us-central1-docker.pkg.dev
   GKE_CLUSTER_ID: autopilot-cluster-1
 
 jobs:
-  build:
+  build-push:
     runs-on: ubuntu-latest
     outputs:
         image_tag: ${{ steps.meta.outputs.tag }}
@@ -40,31 +32,6 @@ jobs:
         id: meta
         run: echo "tag=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
 
-      # build docker image
-      - name: Build the Docker image
-        run: docker build -t ${IMAGE_NAME}:${{steps.meta.outputs.tag}} .
-  pushTKE:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      # Push the Docker image to TKE Registry
-      - name: Login TKE Registry
-        run: docker login ${TKE_DOCKER_HUB} --username="${{secrets.TENCENT_CLOUD_ACCOUNT_ID}}" -p "${{ secrets.TKE_REGISTRY_PASSWORD }}"
-      - name: Publish
-        run: docker push ${TKE_DOCKER_HUB}/hejunwei/${IMAGE_NAME}:${{needs.build.outputs.image_tag}}
-
-      # deploy k8s
-      - name: Set up ~/.kube/config for connecting TKE cluster
-        uses: TencentCloud/tke-cluster-credential-action@v1
-        with:
-          secret_id: ${{ secrets.TENCENT_CLOUD_SECRET_ID }}
-          secret_key: ${{ secrets.TENCENT_CLOUD_SECRET_KEY }}
-          tke_region: ${{ env.TKE_REGION }}
-          cluster_id: ${{ env.TKE_CLUSTER_ID }}
-  pushGKE:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
       # 1、认证 GCP
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
@@ -82,43 +49,33 @@ jobs:
 
       # 4、构建并推送镜像
       - name: Build and Push Docker Image
-        run: docker push ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{needs.build.outputs.image_tag}}
+        run: |
+          docker build -t ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{steps.meta.outputs.tag}} .
+          docker push ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{steps.meta.outputs.tag}}
 
-      # 5、获取 GKE 凭证
+  deploy:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      # 1、认证 GCP
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # 2、设置 gcloud
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      # 3、获取 GKE 凭证
       - name: Get GKE credentials
         run: |
           gcloud container clusters get-credentials ${GKE_CLUSTER_ID} \
             --region ${GKE_REGION} \
             --project ${GCP_PROJECT_ID}
 
-      # 6、部署到 GKE
+      # 4、部署到 GKE
       - name: Deploy
         run: |
           kubectl set image deployment/${DEPLOYMENT_NAME} \
-            ${CONTAINER_NAME}=${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{needs.build.outputs.image_tag}}
-
-  deploy-docs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.24
-
-      - name: Generate Swagger Docs
-        run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
-          swag init -g main.go
-
-      - name: TencentCloudCOSAction
-        uses: horan-geeker/cos-action@1.0.0
-        with:
-          secret_id: ${{ secrets.COS_SECRET_ID }}
-          secret_key: ${{ secrets.COS_SECRET_KEY }}
-          cos_bucket: ${{ env.COS_BUCKET }}
-          cos_region: ${{ env.COS_REGION }}
-          local_path: './docs/swagger.json'
-          remote_path: ${{ env.SWAGGER_REMOTE_PATH }}
+            ${CONTAINER_NAME}=${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/repo/${IMAGE_NAME}:${{needs.build-push.outputs.image_tag}}
