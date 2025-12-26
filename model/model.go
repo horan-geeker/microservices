@@ -17,6 +17,7 @@ var (
 type Factory interface {
 	User() User
 	Authorize() Authorize
+	Generation() Generation
 }
 
 // 定义 factory
@@ -32,6 +33,11 @@ func (s *factory) User() User {
 // Authorize .
 func (s *factory) Authorize() Authorize {
 	return newAuthorize(s)
+}
+
+// Generation .
+func (s *factory) Generation() Generation {
+	return newGeneration(s)
 }
 
 // NewFactory .

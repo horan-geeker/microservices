@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"microservices/entity/config"
-	entity "microservices/entity/model"
 	"microservices/pkg/log"
 	"net/http"
 	"net/url"
@@ -22,7 +21,8 @@ import (
 
 type Google interface {
 	// ChatWithGemini generates content using Google's Gemini model.
-	ChatWithGemini(ctx context.Context, apiKey string, prompt string, images []*entity.Image) (*genai.GenerateContentResponse, error)
+	GenerateContent(ctx context.Context, apiKey, model string, parts []*genai.Part,
+		systemInstruction *genai.Content) (*genai.GenerateContentResponse, error)
 	// ExchangeCodeForToken exchanges the authorization code for an OAuth2 token.
 	ExchangeCodeForToken(ctx context.Context, code string) (*oauth2.Token, error)
 	// GetUserInfo retrieves the user information from Google using the access token.
@@ -109,55 +109,34 @@ func (t *GoogleTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-func (g *google) ChatWithGemini(ctx context.Context, apiKey string, prompt string, images []*entity.Image) (*genai.GenerateContentResponse, error) {
+// GenerateContent generates content using Google's Gemini model.
+func (g *google) GenerateContent(ctx context.Context, apiKey string, modelName string, parts []*genai.Part,
+	systemInstruction *genai.Content) (*genai.GenerateContentResponse, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("gemini API key is not configured")
 	}
 
-	// 使用配置中的代理URL，如果没有配置则使用默认值
-	proxyURL := g.opts.ProxyURL
-	if proxyURL == "" {
-		proxyURL = "http://clash:7890" // 默认代理
-	}
-
-	httpClient := &http.Client{
-		Transport: NewGoogleTransport(proxyURL),
-		Timeout:   60 * time.Second,
-	}
-
+	// No proxy for this method as requested
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey:     apiKey,
-		HTTPClient: httpClient,
+		APIKey: apiKey,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	generateConfig := &genai.GenerateContentConfig{}
-	parts := []*genai.Part{
-		genai.NewPartFromText(prompt),
+	generateConfig := &genai.GenerateContentConfig{
+		ResponseMIMEType:  "application/json",
+		SystemInstruction: systemInstruction,
 	}
-	for _, image := range images {
-		parts = append(parts, &genai.Part{
-			InlineData: &genai.Blob{
-				MIMEType: image.MimeType,
-				Data:     image.Content,
-			},
-		})
-	}
-	response, err := client.Models.GenerateContent(
+
+	return client.Models.GenerateContent(
 		ctx,
-		"gemini-2.5-flash-image",
+		modelName,
 		[]*genai.Content{
 			genai.NewContentFromParts(parts, genai.RoleUser),
 		},
 		generateConfig,
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	return response, nil
 }
 
 // ExchangeCodeForToken exchanges the authorization code for an OAuth2 token.
