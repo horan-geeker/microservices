@@ -2,7 +2,10 @@ package aigc
 
 import (
 	"context"
+	"fmt"
+	"microservices/cache"
 	"microservices/logic/auth"
+	"microservices/pkg/log"
 
 	entity "microservices/entity/model"
 	"microservices/model"
@@ -19,26 +22,37 @@ type AIGCLogic interface {
 }
 
 type aigcLogic struct {
-	googleService service.Google
-	model         model.Factory
-	authLogic     auth.Logic
+	model     model.Factory
+	cache     cache.Factory
+	service   service.Factory
+	authLogic auth.Logic
 }
 
-func NewAIGCLogic(googleService service.Google, model model.Factory) AIGCLogic {
+func NewAIGCLogic(model model.Factory, cache cache.Factory, service service.Factory) AIGCLogic {
 	return &aigcLogic{
-		googleService: googleService,
-		model:         model,
+		model:     model,
+		cache:     cache,
+		service:   service,
+		authLogic: auth.NewAuth(model, cache, service),
 	}
 }
 
 func (l *aigcLogic) Generate(ctx context.Context, apiKey, model, prompt string) (uint64, error) {
-	auth, err := l.authLogic.GetAuthUser(ctx)
+	authUser, err := l.authLogic.GetAuthUser(ctx)
 	if err != nil {
 		return 0, err
 	}
+	// 0. Check Lock
+	locked, err := l.cache.AIGC().SetGenerationLock(ctx, authUser.Uid)
+	if err != nil {
+		return 0, err
+	}
+	if !locked {
+		return 0, fmt.Errorf("Generate already in progress")
+	}
 	// Create Generation Record
 	gen := &entity.Generation{
-		UserID:    auth.Uid,
+		UserID:    authUser.Uid,
 		Type:      "text",
 		ModelName: model,
 		Prompt:    prompt, // todo 补全用户 prompt
@@ -52,8 +66,12 @@ func (l *aigcLogic) Generate(ctx context.Context, apiKey, model, prompt string) 
 	}
 
 	// Async call
-	go func(genID uint64, prompt string) {
-		resp, err := l.googleService.GenerateContent(
+	go func(genID uint64, prompt string, uid int) {
+		// Ensure lock is released even if panic
+		defer func() {
+			_ = l.cache.AIGC().ReleaseGenerationLock(context.Background(), uid)
+		}()
+		resp, err := l.service.Google().GenerateContent(
 			ctx,
 			apiKey,
 			model,
@@ -74,12 +92,14 @@ func (l *aigcLogic) Generate(ctx context.Context, apiKey, model, prompt string) 
 			content = resp.Candidates[0].Content.Parts[0].Text
 		}
 
-		_ = l.model.Generation().Update(ctx, genID, map[string]interface{}{
+		if err := l.model.Generation().Update(ctx, genID, map[string]interface{}{
 			"status":       status,
 			"content_text": content,
 			"updated_at":   time.Now(),
-		})
-	}(gen.ID, prompt)
+		}); err != nil {
+			log.Error(ctx, "sql-error", err, nil)
+		}
+	}(gen.ID, prompt, authUser.Uid)
 
 	return gen.ID, nil
 }

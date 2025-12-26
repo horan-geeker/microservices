@@ -26,7 +26,7 @@ type controller struct {
 func NewAIGCController(model model.Factory, cache cache.Factory, service service.Factory) Controller {
 	return &controller{
 		logic:     logic.NewLogic(model, cache, service),
-		aigcLogic: aigc.NewAIGCLogic(service.Google(), model),
+		aigcLogic: aigc.NewAIGCLogic(model, cache, service),
 		model:     model,
 	}
 }

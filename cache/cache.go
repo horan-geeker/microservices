@@ -15,6 +15,7 @@ type Factory interface {
 	Auth() Auth
 	User() User
 	System() System
+	AIGC() AIGC
 }
 
 type factory struct {
@@ -31,6 +32,10 @@ func (f *factory) User() User {
 
 func (f *factory) System() System {
 	return newSystem(f.rdb)
+}
+
+func (f *factory) AIGC() AIGC {
+	return newAIGC(f.rdb)
 }
 
 // NewFactory .
