@@ -2,9 +2,9 @@ name: Build Docker CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
 #  pull_request:
-#    branches: [ master ]
+#    branches: [ main ]
 
 env:
   IMAGE_NAME: microservices
@@ -54,37 +54,37 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           docker build -t ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${{steps.meta.outputs.tag}} .
-          docker push ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${{steps.meta.outputs.tag}}
+#          docker push ${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${{steps.meta.outputs.tag}}
 
-  deploy:
-    needs: build-push
-    runs-on: ubuntu-latest
-    steps:
-      # 1、认证 GCP
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+#  deploy:
+#    needs: build-push
+#    runs-on: ubuntu-latest
+#    steps:
+#      # 1、认证 GCP
+#      - name: Authenticate to GCP
+#        uses: google-github-actions/auth@v2
+#        with:
+#          credentials_json: ${{ secrets.GCP_SA_KEY }}
+#
+#      # 2、设置 gcloud
+#      - name: Setup gcloud
+#        uses: google-github-actions/setup-gcloud@v2
+#        with:
+#          export_default_credentials: true
+#
+#      # 3、安装插件
+#      - name: Install gke-gcloud-auth-plugin
+#        run: gcloud components install gke-gcloud-auth-plugin
+#
+#      # 4、获取 GKE 凭证
+#      - name: Get GKE credentials
+#        run: |
+#          gcloud container clusters get-credentials ${GKE_CLUSTER_ID} \
+#            --region ${GKE_REGION} \
+#            --project ${GCP_PROJECT_ID}
 
-      # 2、设置 gcloud
-      - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          export_default_credentials: true
-
-      # 3、安装插件
-      - name: Install gke-gcloud-auth-plugin
-        run: gcloud components install gke-gcloud-auth-plugin
-
-      # 4、获取 GKE 凭证
-      - name: Get GKE credentials
-        run: |
-          gcloud container clusters get-credentials ${GKE_CLUSTER_ID} \
-            --region ${GKE_REGION} \
-            --project ${GCP_PROJECT_ID}
-
-      # 5、部署到 GKE
-      - name: Deploy
-        run: |
-          kubectl set image deployment/${DEPLOYMENT_NAME} \
-            ${CONTAINER_NAME}=${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${{needs.build-push.outputs.image_tag}}
+#      # 5、部署到 GKE
+#      - name: Deploy
+#        run: |
+#          kubectl set image deployment/${DEPLOYMENT_NAME} \
+#            ${CONTAINER_NAME}=${GKE_DOCKER_HUB}/${GCP_PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:${{needs.build-push.outputs.image_tag}}
