@@ -64,8 +64,11 @@ func NewGoogleTransport(proxyURL string) *GoogleTransport {
 func (t *GoogleTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	fullUrl := req.URL.String()
 	method := req.Method
-	reqBody, _ := io.ReadAll(req.Body)
-	req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
+	var reqBody []byte
+	if req.Body != nil {
+		reqBody, _ = io.ReadAll(req.Body)
+		req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
+	}
 	reqHeaders := make(map[string]string)
 	for k, v := range req.Header {
 		reqHeaders[k] = strings.Join(v, ",")
@@ -182,13 +185,20 @@ func (g *google) ExchangeCodeForToken(ctx context.Context, code string) (*oauth2
 
 // GetUserInfo retrieves the user information from Google using the access token.
 func (g *google) GetUserInfo(ctx context.Context, tokenSource oauth2.TokenSource) (*oauth2_v2.Userinfo, error) {
-	httpClient := &http.Client{
+	// 1. Create base client with Proxy
+	baseClient := &http.Client{
 		Transport: NewGoogleTransport(g.opts.ProxyURL),
 		Timeout:   60 * time.Second,
 	}
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
 
-	service, err := oauth2_v2.NewService(ctx, option.WithTokenSource(tokenSource), option.WithHTTPClient(httpClient))
+	// 2. Wrap baseClient in context so oauth2.NewClient uses it
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, baseClient)
+
+	// 3. Create authenticated client
+	authClient := oauth2.NewClient(ctx, tokenSource)
+
+	// 4. Create Service using the authenticated client
+	service, err := oauth2_v2.NewService(ctx, option.WithHTTPClient(authClient))
 	if err != nil {
 		return nil, err
 	}

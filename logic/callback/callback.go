@@ -11,7 +11,6 @@ import (
 	"microservices/entity/jwt"
 	entity "microservices/entity/model"
 	"microservices/model"
-	"microservices/pkg/util"
 	"microservices/service"
 	"time"
 
@@ -78,6 +77,14 @@ func (l *logic) GoogleCallback(ctx context.Context, code string) (*entity.User, 
 		jsonBytes, _ := json.Marshal(userInfo)
 		authData["json"] = string(jsonBytes)
 		_ = l.model.Authorize().Update(ctx, auth.ID, authData)
+
+		// Sync User Avatar if changed or empty
+		if userInfo.Picture != "" && user.Avatar != userInfo.Picture {
+			_ = l.model.User().Update(ctx, user.ID, map[string]any{
+				"avatar": userInfo.Picture,
+			})
+			user.Avatar = userInfo.Picture // update local object
+		}
 	} else {
 		// Not found, check existing user by email
 		user, err = l.model.User().GetByEmail(ctx, userInfo.Email)
@@ -87,15 +94,14 @@ func (l *logic) GoogleCallback(ctx context.Context, code string) (*entity.User, 
 
 		if user == nil || user.ID == 0 {
 			// Create new user
-			// Generate random password
-			password := util.RandomString(16)
-			passwordHash := util.MD5(password) // Using MD5 as seen in auth.go
 
 			newUser := &entity.User{
 				Name:      userInfo.Name,
+				Avatar:    userInfo.Picture,
 				Email:     userInfo.Email,
-				Password:  passwordHash,
+				Password:  "",
 				Status:    consts.UserStatusNormal,
+				LoginAt:   time.Now(),
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
 			}
@@ -103,6 +109,14 @@ func (l *logic) GoogleCallback(ctx context.Context, code string) (*entity.User, 
 				return nil, "", err
 			}
 			user = newUser
+		} else {
+			// Exist user found by email, sync avatar if needed
+			if userInfo.Picture != "" && user.Avatar != userInfo.Picture {
+				_ = l.model.User().Update(ctx, user.ID, map[string]any{
+					"avatar": userInfo.Picture,
+				})
+				user.Avatar = userInfo.Picture
+			}
 		}
 
 		// Create Authorize record
