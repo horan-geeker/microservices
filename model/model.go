@@ -18,6 +18,7 @@ type Factory interface {
 	User() User
 	Authorize() Authorize
 	Generation() Generation
+	Order() Order
 }
 
 // 定义 factory
@@ -38,6 +39,11 @@ func (s *factory) Authorize() Authorize {
 // Generation .
 func (s *factory) Generation() Generation {
 	return newGeneration(s)
+}
+
+// Order .
+func (s *factory) Order() Order {
+	return newOrder(s)
 }
 
 // NewFactory .

@@ -40,6 +40,19 @@ type Config struct {
 	AliyunSmsSignName     string `mapstructure:"ALIYUN_SMS_SIGN_NAME" json:"aliyun_sms_sign_name"`
 	AliyunSmsTemplateCode string `mapstructure:"ALIYUN_SMS_TEMPLATE_CODE" json:"aliyun_sms_template_code"`
 
+	AlipayAppId             string `mapstructure:"ALIPAY_APP_ID" json:"alipay_app_id"`
+	AlipayPrivateKey        string `mapstructure:"ALIPAY_PRIVATE_KEY" json:"alipay_private_key"`
+	AlipayPublicKey         string `mapstructure:"ALIPAY_PUBLIC_KEY" json:"alipay_public_key"`
+	AlipayAppPublicKey      string `mapstructure:"ALIPAY_APP_PUBLIC_KEY" json:"alipay_app_public_key"`
+	AlipayAppPublicCertPath string `mapstructure:"ALIPAY_APP_PUBLIC_CERT_PATH" json:"alipay_app_public_cert_path"`
+	AlipayRootCertPath      string `mapstructure:"ALIPAY_ROOT_CERT_PATH" json:"alipay_root_cert_path"`
+	AlipayPublicCertPath    string `mapstructure:"ALIPAY_PUBLIC_CERT_PATH" json:"alipay_public_cert_path"`
+	AlipayNotifyUrl         string `mapstructure:"ALIPAY_NOTIFY_URL" json:"alipay_notify_url"`
+	AlipayReturnUrl         string `mapstructure:"ALIPAY_RETURN_URL" json:"alipay_return_url"`
+	AlipayIsProduction      bool   `mapstructure:"ALIPAY_IS_PRODUCTION" json:"alipay_is_production"`
+
+	AppleSharedSecret string `mapstructure:"APPLE_SHARED_SECRET" json:"apple_shared_secret"`
+
 	JWTSecret string `mapstructure:"JWT_SECRET" json:"jwt_secret"`
 }
 

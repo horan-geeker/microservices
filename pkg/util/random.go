@@ -17,3 +17,20 @@ func RandomString(n int) string {
 	}
 	return string(b)
 }
+
+// RandomN returns a random number with n digits.
+func RandomN(n int) int {
+	if n <= 0 {
+		return 0
+	}
+	// min = 10^(n-1), max = 10^n - 1
+	var min, max int = 1, 1
+	for i := 0; i < n-1; i++ {
+		min *= 10
+	}
+	for i := 0; i < n; i++ {
+		max *= 10
+	}
+	max = max - 1
+	return seededRand.Intn(max-min+1) + min
+}

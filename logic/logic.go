@@ -5,6 +5,7 @@ import (
 	"microservices/logic/auth"
 	"microservices/logic/callback"
 	"microservices/logic/notify"
+	"microservices/logic/order"
 	"microservices/logic/user"
 	"microservices/model"
 	"microservices/service"
@@ -16,6 +17,7 @@ type Factory interface {
 	Auth() auth.Logic
 	Callback() callback.Logic
 	Notify() notify.Logic
+	Order() order.Logic
 }
 
 type factory struct {
@@ -38,6 +40,10 @@ func (l *factory) Auth() auth.Logic {
 
 func (l *factory) Callback() callback.Logic {
 	return callback.NewCallback(l.model, l.cache, l.service)
+}
+
+func (l *factory) Order() order.Logic {
+	return order.NewLogic(l.model, l.cache, l.service)
 }
 
 // NewLogic .
