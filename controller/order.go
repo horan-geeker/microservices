@@ -18,6 +18,7 @@ type OrderController interface {
 	GetList(c *gin.Context, req *request.GetOrderListRequest) (*response.GetOrderListResponse, error)
 	CreateAlipayPrepay(c *gin.Context, req *request.CreateAlipayPrepay) (*response.CreateAlipayPrepay, error)
 	VerifyAppleReceipt(c *gin.Context, param *request.AppleVerifyReceiptParam) (*response.AppleVerifyReceipt, error)
+	CreateStripeCheckout(c *gin.Context, req *request.CreateStripeCheckoutRequest) (*response.CreateStripeCheckoutResponse, error)
 }
 
 type orderController struct {
@@ -31,7 +32,7 @@ func NewOrderController(model model.Factory, cache cache.Factory, service servic
 }
 
 func (ctrl *orderController) GetDetail(c *gin.Context, id int) (*entity.Order, error) {
-	auth, err := ctrl.logic.Auth().GetAuthUser(c)
+	auth, err := ctrl.logic.Auth().GetAuthUser(c.Request.Context())
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,7 @@ func (ctrl *orderController) GetDetail(c *gin.Context, id int) (*entity.Order, e
 }
 
 func (ctrl *orderController) GetList(c *gin.Context, req *request.GetOrderListRequest) (*response.GetOrderListResponse, error) {
-	auth, err := ctrl.logic.Auth().GetAuthUser(c)
+	auth, err := ctrl.logic.Auth().GetAuthUser(c.Request.Context())
 	if err != nil {
 		return nil, err
 	}
@@ -115,4 +116,31 @@ func (p *orderController) VerifyAppleReceipt(c *gin.Context, param *request.Appl
 	}
 
 	return p.logic.Order().VerifyAppleReceipt(c.Request.Context(), user.ID, param.ReceiptData, param.ExcludeOldTransactions)
+}
+
+// CreateStripeCheckout godoc
+// @Summary Create Stripe Checkout Session
+// @Description Initiate Stripe checkout process
+// @Tags Payment
+// @Accept json
+// @Produce json
+// @Param param body request.CreateStripeCheckoutRequest true "Stripe Checkout Parameters"
+// @Success 200 {object} entity.Response[response.CreateStripeCheckoutResponse]
+// @Router /order/create-stripe-checkout [post]
+func (p *orderController) CreateStripeCheckout(c *gin.Context, req *request.CreateStripeCheckoutRequest) (*response.CreateStripeCheckoutResponse, error) {
+	clientIP := util.GetUserIP(c)
+	auth, err := p.logic.Auth().GetAuthUser(c.Request.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	order, url, err := p.logic.Order().CreateStripeCheckout(c.Request.Context(), auth.Uid, req.PriceID, clientIP)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.CreateStripeCheckoutResponse{
+		OrderId: order.ID,
+		Url:     url,
+	}, nil
 }

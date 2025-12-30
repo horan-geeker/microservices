@@ -18,6 +18,7 @@ type Logic interface {
 		excludeOldTransactions bool) (*response.AppleVerifyReceipt, error)
 	GetDetail(ctx context.Context, id, userId int) (*entity.Order, error)
 	GetList(ctx context.Context, userID int, req *request.GetOrderListRequest) (*response.GetOrderListResponse, error)
+	CreateStripeCheckout(ctx context.Context, userId int, priceId, clientIP string) (*entity.Order, string, error)
 }
 
 type logic struct {

@@ -10,6 +10,6 @@ import (
 
 func init() {
 	userController := controller.NewUserController(model.NewFactory(), cache.NewFactory(), service.NewFactory())
-	router.GET("/users/:id", userController.Get)
+	router.GET("/userinfo", middleware.Authenticate(), userController.GetUserInfo)
 	router.POST("/users/:id/edit", middleware.Authenticate(), userController.Edit)
 }

@@ -10,6 +10,7 @@ type Factory interface {
 	Google() Google
 	Alipay() Alipay
 	Apple() Apple
+	Stripe() Stripe
 }
 
 type factory struct {
@@ -18,6 +19,7 @@ type factory struct {
 	googleOpt  *config.GoogleOptions
 	alipayOpt  *config.AlipayOptions
 	appleOpt   *config.AppleOptions
+	stripeOpt  *config.StripeOptions
 }
 
 func (f *factory) Tencent() Tencent {
@@ -40,6 +42,10 @@ func (f *factory) Apple() Apple {
 	return newApple(f.appleOpt)
 }
 
+func (f *factory) Stripe() Stripe {
+	return newStripe(f.stripeOpt)
+}
+
 // NewFactory .
 func NewFactory() Factory {
 	if srv == nil {
@@ -49,6 +55,7 @@ func NewFactory() Factory {
 			googleOpt:  config.NewGoogleOptions(),
 			alipayOpt:  config.NewAlipayOptions(),
 			appleOpt:   config.NewAppleOptions(),
+			stripeOpt:  config.NewStripeOptions(),
 		}
 	}
 	return srv

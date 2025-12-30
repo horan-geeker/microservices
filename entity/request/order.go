@@ -11,3 +11,7 @@ type CreateAlipayPrepay struct {
 	Channel     string `json:"channel" binding:"required"`
 	Description string `json:"description"`
 }
+
+type CreateStripeCheckoutRequest struct {
+	PriceID string `json:"priceId" binding:"required"`
+}

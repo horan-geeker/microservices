@@ -8,7 +8,8 @@ import (
 
 // Config 环境变量映射结构体
 type Config struct {
-	AppEnv string `mapstructure:"APP_ENV" json:"app_env" default:"development"`
+	AppEnv    string `mapstructure:"APP_ENV" json:"app_env" default:"development"`
+	AppDomain string `mapstructure:"APP_DOMAIN" json:"app_domain" default:"localhost"`
 
 	ServerHost    string `mapstructure:"SERVER_HOST" json:"server_host" default:"127.0.0.1"`
 	ServerPort    int    `mapstructure:"SERVER_PORT" json:"server_port,string" default:"80"`
@@ -50,6 +51,9 @@ type Config struct {
 	AlipayNotifyUrl         string `mapstructure:"ALIPAY_NOTIFY_URL" json:"alipay_notify_url"`
 	AlipayReturnUrl         string `mapstructure:"ALIPAY_RETURN_URL" json:"alipay_return_url"`
 	AlipayIsProduction      bool   `mapstructure:"ALIPAY_IS_PRODUCTION" json:"alipay_is_production"`
+
+	StripeSecretKey     string `mapstructure:"STRIPE_SECRET_KEY" json:"stripe_secret_key"`
+	StripeWebhookSecret string `mapstructure:"STRIPE_WEBHOOK_SECRET" json:"stripe_webhook_secret"`
 
 	AppleSharedSecret string `mapstructure:"APPLE_SHARED_SECRET" json:"apple_shared_secret"`
 

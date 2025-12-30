@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"microservices/cache"
 	_ "microservices/entity"
-	"microservices/entity/ecode"
 	"microservices/entity/request"
 	"microservices/entity/response"
 	"microservices/logic"
@@ -14,7 +13,7 @@ import (
 
 type UserController interface {
 	Edit(c *gin.Context, param *request.EditUserParam) (*response.EditUser, error)
-	Get(c *gin.Context, uid int) (*response.GetUser, error)
+	GetUserInfo(c *gin.Context) (*response.GetUser, error)
 }
 
 type userController struct {
@@ -32,10 +31,6 @@ type userController struct {
 // @Failure 401 {object} entity.Response[any] "用户登录态校验失败(code: 4)"
 // @Router /users/{id}/edit [post]
 func (u *userController) Edit(c *gin.Context, param *request.EditUserParam) (*response.EditUser, error) {
-	token := c.GetHeader("Authorization")
-	if len(token) == 0 {
-		return nil, ecode.ErrTokenIsEmpty
-	}
 	auth, err := u.logic.Auth().GetAuthUser(c)
 	if err != nil {
 		return nil, err
@@ -47,7 +42,7 @@ func (u *userController) Edit(c *gin.Context, param *request.EditUserParam) (*re
 	return nil, nil
 }
 
-// Get godoc
+// GetUserInfo godoc
 // @Summary 获取用户信息
 // @Description 获取用户详细信息
 // @Tags users
@@ -56,9 +51,13 @@ func (u *userController) Edit(c *gin.Context, param *request.EditUserParam) (*re
 // @Param id path int true "User ID"
 // @Success 200 {object} entity.Response[response.GetUser]
 // @Failure 400 {object} entity.Response[any]
-// @Router /users/{id} [get]
-func (u *userController) Get(c *gin.Context, uid int) (*response.GetUser, error) {
-	userinfo, err := u.logic.User().GetByUid(c.Request.Context(), uid)
+// @Router /userinfo [get]
+func (u *userController) GetUserInfo(c *gin.Context) (*response.GetUser, error) {
+	auth, err := u.logic.Auth().GetAuthUser(c.Request.Context())
+	if err != nil {
+		return nil, err
+	}
+	userinfo, err := u.logic.User().GetByUid(c.Request.Context(), auth.Uid)
 	if err != nil {
 		return nil, err
 	}

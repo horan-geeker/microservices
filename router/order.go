@@ -14,4 +14,5 @@ func init() {
 	router.GET("/orders", middleware.Authenticate(), orderController.GetList)
 	router.POST("/orders/pay/alipay", middleware.Authenticate(), orderController.CreateAlipayPrepay)
 	router.POST("/orders/pay/apple-verify-receipt", middleware.Authenticate(), orderController.VerifyAppleReceipt)
+	router.POST("/order/create-stripe-checkout", middleware.Authenticate(), orderController.CreateStripeCheckout)
 }

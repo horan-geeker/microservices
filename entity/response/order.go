@@ -33,3 +33,8 @@ type CreateAlipayPrepay struct {
 	OrderId     int    `json:"orderId"`
 	OrderString string `json:"orderString"`
 }
+
+type CreateStripeCheckoutResponse struct {
+	OrderId int    `json:"orderId"`
+	Url     string `json:"url"`
+}
