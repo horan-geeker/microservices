@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"microservices/cache"
 	entity "microservices/entity/model"
@@ -43,7 +44,6 @@ func (l *logic) UploadFile(ctx context.Context, userId int, fileContent []byte, 
 	filename, md5Hash := l.GenerateFilenameByHash(ctx, fileContent, fileSuffix)
 
 	// Using Cloudflare R2
-	r2Bucket := "aicbpng" // Hardcode or from config
 	contentType := "application/octet-stream"
 	if fileSuffix == "png" {
 		contentType = "image/png"
@@ -51,7 +51,7 @@ func (l *logic) UploadFile(ctx context.Context, userId int, fileContent []byte, 
 		contentType = "image/jpeg"
 	}
 
-	url, err := l.srv.Cloudflare().UploadToR2(ctx, r2Bucket, filename, fileContent, contentType)
+	url, err := l.srv.Cloudflare().UploadToR2(ctx, fmt.Sprintf("%d/%s", userId, filename), fileContent, contentType)
 	if err != nil {
 		return nil, err
 	}
@@ -69,6 +69,11 @@ func (l *logic) UploadFile(ctx context.Context, userId int, fileContent []byte, 
 	}
 	if err := l.model.File().Create(ctx, fileData); err != nil {
 		return nil, err
+	}
+	// Sign URL for response
+	signedUrl, err := l.srv.Cloudflare().SignUrl(ctx, filename, 3600) // 1 hour expiration
+	if err == nil {
+		fileData.PublicUrl = signedUrl
 	}
 	return fileData, nil
 }

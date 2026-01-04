@@ -4,24 +4,28 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"time"
+
+	"microservices/entity/config"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	config2 "microservices/entity/config"
-	"os"
 )
 
 type CloudflareService interface {
-	UploadToR2(ctx context.Context, bucket string, key string, content []byte, contentType string) (string, error)
+	UploadToR2(ctx context.Context, key string, content []byte, contentType string) (string, error)
 	GetCustomDomain() string
+	SignUrl(ctx context.Context, key string, expired int64) (string, error) // Added
 }
 
 type cloudflareService struct {
-	s3Client *s3.Client
-	config   *config2.CloudflareOptions
+	s3Client      *s3.Client
+	presignClient *s3.PresignClient // Added
+	config        *config.CloudflareOptions
 }
 
-func NewCloudflareService(opt *config2.CloudflareOptions) CloudflareService {
+func NewCloudflareService(opt *config.CloudflareOptions) CloudflareService {
 	// Initialize S3 client for Cloudflare R2
 	accountID := opt.AccountId
 	accessKey := opt.AccessKeyId
@@ -33,18 +37,24 @@ func NewCloudflareService(opt *config2.CloudflareOptions) CloudflareService {
 		return &cloudflareService{config: opt}
 	}
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithCredentialsProvider(aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
+	cfg, err := awsconfig.LoadDefaultConfig(context.TODO(), // This is AWS config loader, not our entity/config package. Need to alias our import if clash.
+		// Oh wait, `github.com/aws/aws-sdk-go-v2/config` is imported as `config`.
+		// Our entity config is usually imported as `microservices/entity/config`.
+		// Let's check imports.
+		// existing: 	"github.com/aws/aws-sdk-go-v2/service/s3"
+		// I need to import "microservices/entity/config" as well. I should alias AWS config or Entity config.
+		// I'll alias AWS config as `awsconfig`.
+		awsconfig.WithCredentialsProvider(aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
 			return aws.Credentials{
 				AccessKeyID:     accessKey,
 				SecretAccessKey: secretKey,
 			}, nil
 		})),
-		config.WithRegion("auto"), // R2 uses auto
+		awsconfig.WithRegion("auto"), // R2 uses auto
 	)
 	if err != nil {
 		fmt.Printf("unable to load SDK config, %v", err)
-		return &cloudflareService{}
+		return &cloudflareService{config: opt}
 	}
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
@@ -52,17 +62,19 @@ func NewCloudflareService(opt *config2.CloudflareOptions) CloudflareService {
 	})
 
 	return &cloudflareService{
-		s3Client: client,
+		s3Client:      client,
+		presignClient: s3.NewPresignClient(client), // Added
+		config:        opt,
 	}
 }
 
-func (s *cloudflareService) UploadToR2(ctx context.Context, bucket string, key string, content []byte, contentType string) (string, error) {
+func (s *cloudflareService) UploadToR2(ctx context.Context, key string, content []byte, contentType string) (string, error) {
 	if s.s3Client == nil {
-		return "", fmt.Errorf("cloudflare client not initialized (check env vars)")
+		return "", fmt.Errorf("cloudflare client not initialized (check config)")
 	}
 
 	_, err := s.s3Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(bucket),
+		Bucket:      aws.String(s.config.Bucket),
 		Key:         aws.String(key),
 		Body:        bytes.NewReader(content),
 		ContentType: aws.String(contentType),
@@ -78,9 +90,27 @@ func (s *cloudflareService) UploadToR2(ctx context.Context, bucket string, key s
 	if domain != "" {
 		return fmt.Sprintf("%s/%s", domain, key), nil
 	}
-	return fmt.Sprintf("https://%s.r2.cloudflarestorage.com/%s", os.Getenv("CLOUDFLARE_ACCOUNT_ID"), key), nil
+	return fmt.Sprintf("https://%s.r2.cloudflarestorage.com/%s", s.config.AccountId, key), nil
 }
 
 func (s *cloudflareService) GetCustomDomain() string {
-	return os.Getenv("CLOUDFLARE_PUBLIC_DOMAIN") // e.g., https://assets.aicbpng.com
+	return s.config.PublicDomain
+}
+
+func (s *cloudflareService) SignUrl(ctx context.Context, key string, expired int64) (string, error) {
+	if s.presignClient == nil {
+		return "", fmt.Errorf("presign client not initialized")
+	}
+
+	request, err := s.presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.config.Bucket),
+		Key:    aws.String(key),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = time.Duration(expired) * time.Second
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return request.URL, nil
 }

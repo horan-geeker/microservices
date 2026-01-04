@@ -3,5 +3,5 @@ package consts
 import "time"
 
 const (
-	UserTokenExpiredIn = time.Hour * 2
+	UserTokenExpiredIn = time.Hour * 48
 )
