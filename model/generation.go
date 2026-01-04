@@ -11,6 +11,7 @@ type Generation interface {
 	Create(ctx context.Context, generation *entity.Generation) error
 	Update(ctx context.Context, id uint64, updates map[string]interface{}) error
 	GetByID(ctx context.Context, id uint64) (*entity.Generation, error)
+	ListByUserID(ctx context.Context, uid int, page, size int) ([]*entity.Generation, int64, error)
 }
 
 type generation struct {
@@ -38,4 +39,22 @@ func (g *generation) GetByID(ctx context.Context, id uint64) (*entity.Generation
 		return nil, err
 	}
 	return &gen, nil
+}
+
+func (g *generation) ListByUserID(ctx context.Context, uid int, page, size int) ([]*entity.Generation, int64, error) {
+	var generations []*entity.Generation
+	var total int64
+
+	db := g.db.WithContext(ctx).Model(&entity.Generation{}).Where("user_id = ?", uid)
+
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * size
+	if err := db.Order("id desc").Offset(offset).Limit(size).Find(&generations).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return generations, total, nil
 }
