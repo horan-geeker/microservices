@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"microservices/entity/config"
 	"net/http"
 	"os"
 	"time"
@@ -16,10 +17,13 @@ type FalService interface {
 }
 
 type falService struct {
+	config *config.FalOptions
 }
 
-func NewFalService() FalService {
-	return &falService{}
+func NewFalService(opt *config.FalOptions) FalService {
+	return &falService{
+		config: opt,
+	}
 }
 
 type falQueueResponse struct {

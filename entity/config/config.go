@@ -58,6 +58,14 @@ type Config struct {
 	AppleSharedSecret string `mapstructure:"APPLE_SHARED_SECRET" json:"apple_shared_secret"`
 
 	JWTSecret string `mapstructure:"JWT_SECRET" json:"jwt_secret"`
+
+	CloudflareAccountId       string `mapstructure:"CLOUDFLARE_ACCOUNT_ID" json:"cloudflare_account_id"`
+	CloudflareAccessKeyId     string `mapstructure:"CLOUDFLARE_ACCESS_KEY_ID" json:"cloudflare_access_key_id"`
+	CloudflareSecretAccessKey string `mapstructure:"CLOUDFLARE_SECRET_ACCESS_KEY" json:"cloudflare_secret_access_key"`
+	CloudflareBucket          string `mapstructure:"CLOUDFLARE_BUCKET" json:"cloudflare_bucket"`
+	CloudflarePublicDomain    string `mapstructure:"CLOUDFLARE_PUBLIC_DOMAIN" json:"cloudflare_public_domain"`
+
+	FalKey string `mapstructure:"FAL_KEY" json:"fal_key"`
 }
 
 var conf *Config

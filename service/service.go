@@ -16,12 +16,14 @@ type Factory interface {
 }
 
 type factory struct {
-	tencentOpt *config.TencentOptions
-	aliyunOpt  *config.AliyunOptions
-	googleOpt  *config.GoogleOptions
-	alipayOpt  *config.AlipayOptions
-	appleOpt   *config.AppleOptions
-	stripeOpt  *config.StripeOptions
+	tencentOpt    *config.TencentOptions
+	aliyunOpt     *config.AliyunOptions
+	googleOpt     *config.GoogleOptions
+	alipayOpt     *config.AlipayOptions
+	appleOpt      *config.AppleOptions
+	stripeOpt     *config.StripeOptions
+	falOpt        *config.FalOptions
+	cloudflareOpt *config.CloudflareOptions
 }
 
 func (f *factory) Tencent() Tencent {
@@ -49,23 +51,25 @@ func (f *factory) Stripe() Stripe {
 }
 
 func (f *factory) Fal() FalService {
-	return NewFalService()
+	return NewFalService(f.falOpt)
 }
 
 func (f *factory) Cloudflare() CloudflareService {
-	return NewCloudflareService()
+	return NewCloudflareService(f.cloudflareOpt)
 }
 
 // NewFactory .
 func NewFactory() Factory {
 	if srv == nil {
 		srv = &factory{
-			tencentOpt: config.NewTencentOptions(),
-			aliyunOpt:  config.NewAliyunOptions(),
-			googleOpt:  config.NewGoogleOptions(),
-			alipayOpt:  config.NewAlipayOptions(),
-			appleOpt:   config.NewAppleOptions(),
-			stripeOpt:  config.NewStripeOptions(),
+			tencentOpt:    config.NewTencentOptions(),
+			aliyunOpt:     config.NewAliyunOptions(),
+			googleOpt:     config.NewGoogleOptions(),
+			alipayOpt:     config.NewAlipayOptions(),
+			appleOpt:      config.NewAppleOptions(),
+			stripeOpt:     config.NewStripeOptions(),
+			falOpt:        config.NewFalOptions(),
+			cloudflareOpt: config.NewCloudflareOptions(),
 		}
 	}
 	return srv

@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	config2 "microservices/entity/config"
+	"os"
 )
 
 type CloudflareService interface {
@@ -18,18 +18,19 @@ type CloudflareService interface {
 
 type cloudflareService struct {
 	s3Client *s3.Client
+	config   *config2.CloudflareOptions
 }
 
-func NewCloudflareService() CloudflareService {
+func NewCloudflareService(opt *config2.CloudflareOptions) CloudflareService {
 	// Initialize S3 client for Cloudflare R2
-	accountID := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
-	accessKey := os.Getenv("CLOUDFLARE_ACCESS_KEY_ID")
-	secretKey := os.Getenv("CLOUDFLARE_SECRET_ACCESS_KEY")
+	accountID := opt.AccountId
+	accessKey := opt.AccessKeyId
+	secretKey := opt.SecretAccessKey
 
 	if accountID == "" || accessKey == "" || secretKey == "" {
 		// Log warning or return dummy? For now returning struct with nil client will cause panic on use, but factory pattern usually assumes config exists.
 		// We can return nil client and handle error in Upload.
-		return &cloudflareService{}
+		return &cloudflareService{config: opt}
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO(),
