@@ -50,8 +50,8 @@ func (l *logic) UploadFile(ctx context.Context, userId int, fileContent []byte, 
 	} else if fileSuffix == "jpg" || fileSuffix == "jpeg" {
 		contentType = "image/jpeg"
 	}
-
-	url, err := l.srv.Cloudflare().UploadToR2(ctx, fmt.Sprintf("%d/%s", userId, filename), fileContent, contentType)
+	key := fmt.Sprintf("%d/%s", userId, filename)
+	url, err := l.srv.Cloudflare().UploadToR2(ctx, key, fileContent, contentType)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (l *logic) UploadFile(ctx context.Context, userId int, fileContent []byte, 
 		return nil, err
 	}
 	// Sign URL for response
-	signedUrl, err := l.srv.Cloudflare().SignUrl(ctx, filename, 3600) // 1 hour expiration
+	signedUrl, err := l.srv.Cloudflare().SignUrl(ctx, key, 3600) // 1 hour expiration
 	if err == nil {
 		fileData.PublicUrl = signedUrl
 	}
