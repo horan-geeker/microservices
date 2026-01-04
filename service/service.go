@@ -11,6 +11,8 @@ type Factory interface {
 	Alipay() Alipay
 	Apple() Apple
 	Stripe() Stripe
+	Fal() FalService
+	Cloudflare() CloudflareService
 }
 
 type factory struct {
@@ -44,6 +46,14 @@ func (f *factory) Apple() Apple {
 
 func (f *factory) Stripe() Stripe {
 	return newStripe(f.stripeOpt)
+}
+
+func (f *factory) Fal() FalService {
+	return NewFalService()
+}
+
+func (f *factory) Cloudflare() CloudflareService {
+	return NewCloudflareService()
 }
 
 // NewFactory .

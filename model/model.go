@@ -20,6 +20,7 @@ type Factory interface {
 	Generation() Generation
 	Order() Order
 	Goods() Goods
+	File() File
 }
 
 // 定义 factory
@@ -50,6 +51,10 @@ func (s *factory) Order() Order {
 // Goods .
 func (s *factory) Goods() Goods {
 	return newGoods(s)
+}
+
+func (s *factory) File() File {
+	return newFile(s.db)
 }
 
 // NewFactory .

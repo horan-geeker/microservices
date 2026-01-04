@@ -4,6 +4,7 @@ import (
 	"microservices/cache"
 	"microservices/logic/auth"
 	"microservices/logic/callback"
+	"microservices/logic/file"
 	"microservices/logic/goods"
 	"microservices/logic/notify"
 	"microservices/logic/order"
@@ -20,6 +21,7 @@ type Factory interface {
 	Notify() notify.Logic
 	Order() order.Logic
 	Goods() goods.Logic
+	File() file.Logic
 }
 
 type factory struct {
@@ -50,6 +52,10 @@ func (l *factory) Order() order.Logic {
 
 func (l *factory) Goods() goods.Logic {
 	return goods.NewLogic(l.model, l.cache, l.service)
+}
+
+func (l *factory) File() file.Logic {
+	return file.NewLogic(l.model, l.cache, l.service)
 }
 
 // NewLogic .
