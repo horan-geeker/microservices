@@ -22,6 +22,7 @@ type GenerationLogic interface {
 	Generate(ctx context.Context, apiKey, model, prompt string) (uint64, error)
 	List(ctx context.Context, uid int, page, size int) (*response.GetGenerationsResp, error)
 	Detail(ctx context.Context, uid int, id uint64) (*response.GenerationDetailResp, error)
+	GetResult(ctx context.Context, uid int, id uint64) (*response.GenerationResponse, error)
 }
 
 type generationLogic struct {
@@ -113,13 +114,45 @@ func (l *generationLogic) List(ctx context.Context, uid int, page, size int) (*r
 		return nil, err
 	}
 
+	var genIDs []uint64
+	for _, g := range gens {
+		genIDs = append(genIDs, g.ID)
+	}
+
+	filesMap, err := l.model.Generation().GetFilesByGenerationIDs(ctx, genIDs)
+	if err != nil {
+		// Log error but proceed? Or fail. Let's proceed with empty files.
+		log.Error(ctx, "get-generation-files-error", err, nil)
+	}
+
 	list := make([]*response.GenerationSummary, 0, len(gens))
 	for _, g := range gens {
-		list = append(list, &response.GenerationSummary{
+		summary := &response.GenerationSummary{
 			ID:        g.ID,
 			Status:    g.Status,
 			CreatedAt: g.CreatedAt,
-		})
+		}
+
+		if files, ok := filesMap[g.ID]; ok {
+			// Type 1: Input (Original), Type 2: Output (Generated)
+			if f, ok := files[entity.GenerationFileTypeInput]; ok {
+				// Sign URL
+				signedUrl, err := l.service.Cloudflare().SignUrl(ctx, f.FileKey, 3600*24)
+				if err == nil {
+					f.Url = signedUrl
+				}
+				summary.OriginalFile = f
+			}
+			if f, ok := files[entity.GenerationFileTypeOutput]; ok {
+				// Sign URL
+				signedUrl, err := l.service.Cloudflare().SignUrl(ctx, f.FileKey, 3600*24)
+				if err == nil {
+					f.Url = signedUrl
+				}
+				summary.GeneratedFile = f
+			}
+		}
+		list = append(list, summary)
 	}
 
 	return &response.GetGenerationsResp{
@@ -144,5 +177,38 @@ func (l *generationLogic) Detail(ctx context.Context, uid int, id uint64) (*resp
 		ContentText: gen.ContentText,
 		CreatedAt:   gen.CreatedAt,
 		UpdatedAt:   gen.UpdatedAt,
+	}, nil
+}
+
+func (l *generationLogic) GetResult(ctx context.Context, uid int, id uint64) (*response.GenerationResponse, error) {
+	gen, err := l.model.Generation().GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if gen.UserID != uid {
+		return nil, fmt.Errorf("permission denied")
+	}
+
+	var imageUrl string
+	if gen.Status == entity.GenerationStatusSuccess {
+		// Get Output File
+		file, err := l.model.Generation().GetOutputFileByGenID(ctx, id)
+		if err == nil && file != nil {
+			// Sign URL
+			signedUrl, err := l.service.Cloudflare().SignUrl(ctx, file.FileKey, 3600*24) // 24 hours
+			if err == nil {
+				imageUrl = signedUrl
+			} else {
+				imageUrl = file.Url // Fallback
+			}
+		}
+	}
+
+	return &response.GenerationResponse{
+		Status:    gen.Status,
+		ImageUrl:  imageUrl,
+		CreatedAt: gen.CreatedAt,
+		UpdatedAt: gen.UpdatedAt,
 	}, nil
 }

@@ -10,11 +10,10 @@ type alarm struct {
 }
 
 func (a *alarm) SendWeComBot(ctx context.Context, msgType string, message string) error {
-	_, err := http.NewHttp[any](http.NewOptions(5)).Post(ctx, a.wecomBotUrl, nil, map[string]any{
+	return http.NewClient().Post(ctx, a.wecomBotUrl, nil, map[string]any{
 		"msgtype":  msgType,
 		"markdown": map[string]any{"content": message},
 	}, nil)
-	return err
 }
 
 func NewAlarm(opts *Options) *alarm {

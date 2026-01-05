@@ -16,6 +16,7 @@ type Logic interface {
 	HandleAlipayCallback(ctx context.Context, params map[string]string) error
 	HandleAppleCallback(ctx context.Context, notification *request.AppleIAPNotification) error
 	VerifyAlipayNotifySign(ctx context.Context, bm gopay.BodyMap) error
+	HandleStripeCallback(ctx context.Context, payload []byte, header string) error
 }
 
 type logic struct {

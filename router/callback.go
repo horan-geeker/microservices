@@ -15,4 +15,5 @@ func init() {
 	router.POST("/callback/alipay-notify", c.AlipayNotify)
 	router.GET("/callback/alipay", c.AlipayCallback)
 	router.POST("/callback/apple", c.AppleCallback)
+	router.POST("/callback/stripe", c.StripeCallback)
 }

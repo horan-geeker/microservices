@@ -8,6 +8,7 @@ import (
 	"microservices/entity/response"
 	"microservices/logic"
 	"microservices/pkg/log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,7 @@ type CallbackController interface {
 	AlipayNotify(c *gin.Context) (*string, error)
 	AlipayCallback(c *gin.Context) (*response.AlipayCallback, error)
 	AppleCallback(c *gin.Context, payload *request.AppleIAPNotification) (*response.AppleCallback, error)
+	StripeCallback(ctx *gin.Context) (*string, error)
 }
 
 type callbackController struct {
@@ -130,4 +132,30 @@ func (c *callbackController) AppleCallback(ctx *gin.Context, payload *request.Ap
 	}
 
 	return &response.AppleCallback{Message: "success"}, nil
+}
+
+// StripeCallback godoc
+// @Summary Stripe Webhook Callback
+// @Description Handle Stripe webhook events
+// @Tags callback
+// @Accept json
+// @Produce json
+// @Success 200 {string} success
+// @Failure 400 {string} fail
+// @Router /callback/stripe [post]
+func (c *callbackController) StripeCallback(ctx *gin.Context) (*string, error) {
+	const MaxBodyBytes = int64(65536)
+	ctx.Request.Body = http.MaxBytesReader(ctx.Writer, ctx.Request.Body, MaxBodyBytes)
+	payload, err := io.ReadAll(ctx.Request.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	header := ctx.GetHeader("Stripe-Signature")
+	if err := c.logic.Callback().HandleStripeCallback(ctx.Request.Context(), payload, header); err != nil {
+		return nil, err
+	}
+
+	success := "success"
+	return &success, nil
 }

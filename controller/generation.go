@@ -34,18 +34,11 @@ func NewGenerationController(model model.Factory, cache cache.Factory, service s
 }
 
 func (c *controller) Result(ctx *gin.Context, req *request.GenerationResultReq) (*response.GenerationResponse, error) {
-	// Get Generation by ID
-	generation, err := c.model.Generation().GetByID(ctx.Request.Context(), req.ID)
+	auth, err := c.logic.Auth().GetAuthUser(ctx.Request.Context())
 	if err != nil {
 		return nil, err
 	}
-
-	return &response.GenerationResponse{
-		Status:      generation.Status,
-		ContentText: generation.ContentText,
-		CreatedAt:   generation.CreatedAt,
-		UpdatedAt:   generation.UpdatedAt,
-	}, nil
+	return c.aigcLogic.GetResult(ctx.Request.Context(), auth.Uid, req.ID)
 }
 
 func (c *controller) Generate(ctx *gin.Context, req *request.GenerateRequest) (*response.GenerateResponse, error) {

@@ -1,12 +1,15 @@
 package response
 
-import "time"
+import (
+	"microservices/entity/model"
+	"time"
+)
 
 type GenerationResponse struct {
-	Status      int       `json:"status"`
-	ContentText string    `json:"contentText"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	Status    int       `json:"status"`
+	ImageUrl  string    `json:"ImageUrl"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type GenerateResponse struct {
@@ -14,9 +17,11 @@ type GenerateResponse struct {
 }
 
 type GenerationSummary struct {
-	ID        uint64    `json:"id"`
-	Status    int       `json:"status"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID            uint64      `json:"id"`
+	Status        int         `json:"status"`
+	OriginalFile  *model.File `json:"originalFile"`
+	GeneratedFile *model.File `json:"generatedFile"`
+	CreatedAt     time.Time   `json:"createdAt"`
 }
 
 type GetGenerationsResp struct {
